@@ -84,6 +84,23 @@ function powerpress_dashboard_head()
 	margin-top: 5px;
 }
 </style>
+<script type="text/javascript"><!--
+jQuery(document).ready(function($) {
+	jQuery('.powerpress-dashboard-notice').click( function(e) {
+		e.preventDefault();
+		var dash_id = jQuery(this).parents('.postbox').attr('id');
+		jQuery( '#' + dash_id + '-hide' ).prop('checked', false).triggerHandler('click');
+	
+		jQuery.ajax( {
+				type: 'POST',
+				url: '<?php echo admin_url(); ?>admin-ajax.php', 
+				data: { action: 'powerpress_dashboard_dismiss', dismiss_dash_id : dash_id },
+				success: function(response) {
+				}
+			});
+	});
+});
+// --></script>
 <?php
 }
 
@@ -95,12 +112,12 @@ function powerpress_dashboard_stats_content()
 		return; // Lets not do anythign to the dashboard for PowerPress Statistics
 	
 	// If using user capabilities...
-	if( @$Settings['use_caps'] && !current_user_can('view_podcast_stats') )
+	if( !empty($Settings['use_caps']) && !current_user_can('view_podcast_stats') )
 		return;
 		
 	$content = false;
-	$UserPass = $Settings['blubrry_auth'];
-	$Keyword = $Settings['blubrry_program_keyword'];
+	$UserPass = ( !empty($Settings['blubrry_auth']) ? $Settings['blubrry_auth']:'');
+	$Keyword = ( !empty($Settings['blubrry_program_keyword']) ? $Settings['blubrry_program_keyword']:'');
 	$StatsCached = get_option('powerpress_stats');
 	if( $StatsCached && $StatsCached['updated'] > (time()-(60*60*3)) )
 		$content = $StatsCached['content'];
@@ -155,6 +172,27 @@ function powerpress_dashboard_news_content()
 	powerpressadmin_community_news();
 }
 
+function powerpress_dashboard_notice_1_content()
+{
+	$DismissedNotices = get_option('powerpress_dismissed_notices');
+	
+	if( !empty($DismissedNotices[1]) )
+		return; // Lets not do anything to the dashboard for PowerPress Notice
+	
+	$message = '<p>'. __('Apple iTunes podcast specifications for show artwork have changed! Your iTunes image should now be 1400 x 1400 in jpg format.', 'powerpress') .'</p>';
+	$message .= '<p><a href="http://www.powerpresspodcast.com/2012/05/10/itunes-podcasting-specifications-changed-may-2012-what-that-means-for-podcasting/" target="_blank">'. __('Learn more about iTunes podcasting changes', 'powerpress') .'</a></p>';
+	
+	powerpress_dashboard_notice_message(1, $message );
+}
+
+
+function powerpress_dashboard_notice_message($notice_id, $message)
+{
+	echo $message;
+	// Add link to remove this notice.
+	echo '<p><a href="#" id="powerpress_dashboard_notice_'. $notice_id .'_dismiss" class="powerpress-dashboard-notice">'. __('Dismiss', 'powerpress')  .'</a></p>';
+}
+
 
 function powerpress_feed_text_limit( $text, $limit, $finish = '&hellip;') {
 	if( strlen( $text ) > $limit ) {
@@ -174,23 +212,39 @@ function powerpress_dashboard_setup()
 	$StatsDashboard = true;
 	$NewsDashboard = true;
 	
-	if( isset($Settings['disable_dashboard_widget']) && $Settings['disable_dashboard_widget'] == 1 )
-		$StatsDashboard = false; // Lets not do anythign to the dashboard for PowerPress Statistics
+	if( !empty($Settings['disable_dashboard_widget']) )
+		$StatsDashboard = false; // Lets not do anything to the dashboard for PowerPress Statistics
 	
-	if( isset($Settings['disable_dashboard_news']) && $Settings['disable_dashboard_news'] == 1 )
-		$NewsDashboard = false; // Lets not do anythign to the dashboard for PowerPress Statistics
+	if( !empty($Settings['disable_dashboard_news']) )
+		$NewsDashboard = false; // Lets not do anything to the dashboard for PowerPress News
 		
-	if( @$Settings['use_caps'] && !current_user_can('view_podcast_stats') )
+	if( !empty($Settings['use_caps']) && !current_user_can('view_podcast_stats') )
 		$StatsDashboard = false;
-
-	if( $Settings )
+		
+	// PowerPress Dashboard Notice 1:
+	$Notice1Dashboard = false;
+	if( $Settings['timestamp'] < mktime(0, 0, 0, 5, 15, 2012) )
 	{
-		if( $NewsDashboard )
-			wp_add_dashboard_widget( 'powerpress_dashboard_news', __( 'Blubrry PowerPress & Community Podcast', 'powerpress'), 'powerpress_dashboard_news_content' );
-			
-		if( $StatsDashboard )
-			wp_add_dashboard_widget( 'powerpress_dashboard_stats', __( 'Blubrry Podcast Statistics', 'powerpress'), 'powerpress_dashboard_stats_content' );
+		$Notice1Dashboard = true;
+		// Now check if they dismissed the notice...
+		$DismissedNotices = get_option('powerpress_dismissed_notices');
+		if( !empty($DismissedNotices[1]) )
+			$Notice1Dashboard = false;
 	}
+	//$Notice1Dashboard = false;// Temporary till release
+
+	if( $Notice1Dashboard )
+	{
+		$user = wp_get_current_user();
+		powerpressadmin_add_dashboard_notice_widget($user->ID, 1);
+		wp_add_dashboard_widget( 'powerpress_dashboard_notice_1', __( 'Blubrry PowerPress Notice - May 2012', 'powerpress'), 'powerpress_dashboard_notice_1_content' );
+	}
+	
+	if( $NewsDashboard )
+		wp_add_dashboard_widget( 'powerpress_dashboard_news', __( 'Blubrry PowerPress & Community Podcast', 'powerpress'), 'powerpress_dashboard_news_content' );
+		
+	if( $StatsDashboard )
+		wp_add_dashboard_widget( 'powerpress_dashboard_stats', __( 'Blubrry Podcast Statistics', 'powerpress'), 'powerpress_dashboard_stats_content' );
 	
 	$user_options = get_user_option('powerpress_user');
 	if( empty($user_options) || empty($user_options['dashboard_installed']) || $user_options['dashboard_installed'] < 2 )
@@ -198,6 +252,8 @@ function powerpress_dashboard_setup()
 		if( !is_array($user_options) )
 			$user_options = array();
 		$user = wp_get_current_user();
+		
+		
 		
 		// First time we've seen this setting, so must be first time we've added the widgets, lets stack them at the top for convenience.
 		powerpressadmin_add_dashboard_widgets($user->ID);
@@ -207,6 +263,25 @@ function powerpress_dashboard_setup()
 	else
 	{
 		powerpressadmin_add_dashboard_widgets(false);
+	}
+}
+
+function powerpressadmin_add_dashboard_notice_widget($user_id, $notice_id)
+{
+	$user_options = get_user_option('meta-box-order_dashboard', $user_id);
+	if( $user_options )
+	{
+		$save = false;
+		if( !preg_match('/powerpress_dashboard_notice_'.$notice_id.'/', $user_options['normal']) && !preg_match('/powerpress_dashboard_notice_'.$notice_id.'/', $user_options['side']) && !preg_match('/powerpress_dashboard_notice_'.$notice_id.'/', $user_options['column3']) && !preg_match('/powerpress_dashboard_notice_'.$notice_id.'/', $user_options['column4']) )
+		{	
+			$save = true;
+			$user_options['normal'] = 'powerpress_dashboard_notice_'.$notice_id.','.$user_options['normal'];
+		}
+		
+		if( $save )
+		{
+			update_user_option($user_id, "meta-box-order_dashboard", $user_options, true);
+		}
 	}
 }
 
@@ -246,6 +321,15 @@ function powerpressadmin_add_dashboard_widgets( $check_user_id = false)
 	$dashboard_current = $wp_meta_boxes['dashboard']['normal']['core'];
 	
 	$dashboard_powerpress = array();
+	for( $i = 0; $i < 20; $i++ )
+	{
+		if( isset( $dashboard_current['powerpress_dashboard_notice_' . $i] ) )
+		{
+			$dashboard_powerpress['powerpress_dashboard_notice_' . $i] = $dashboard_current['powerpress_dashboard_notice_' . $i];
+			unset($dashboard_current['powerpress_dashboard_notice_' . $i]);
+		}
+	}
+	
 	if( isset( $dashboard_current['powerpress_dashboard_news'] ) )
 	{
 		$dashboard_powerpress['powerpress_dashboard_news'] = $dashboard_current['powerpress_dashboard_news'];
@@ -266,5 +350,20 @@ function powerpressadmin_add_dashboard_widgets( $check_user_id = false)
 	 
 add_action('admin_head-index.php', 'powerpress_dashboard_head');
 add_action('wp_dashboard_setup', 'powerpress_dashboard_setup');
+
+function powerpress_dashboard_dismiss()  // Called by AJAX call
+{
+	$dismiss_dash_id = $_POST['dismiss_dash_id'];
+	preg_match('/^powerpress_dashboard_notice_(.*)$/i', $dismiss_dash_id, $match );
+	if( empty($match[1]) )
+		exit;
+	$DismissedNotices = get_option('powerpress_dismissed_notices');
+	if( !is_array($DismissedNotices) )
+		$DismissedNotices = array();
+	$DismissedNotices[ $match[1] ] = 1;
+	update_option('powerpress_dismissed_notices',  $DismissedNotices);
+	echo 'ok';
+	exit;
+}
 
 ?>
