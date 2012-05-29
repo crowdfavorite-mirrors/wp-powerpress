@@ -8,13 +8,16 @@
 	class Mp3Info {
 		//var $m_DownloadBytesLimit = 1638400; // 1600K (1600*1024) bytes file
 		//var $m_DownloadBytesLimit = 204800; // 200K (200*1024) bytes file
-		var $m_DownloadBytesLimit = 327680; // 320K (320*1024) bytes file
+		//var $m_DownloadBytesLimit = 327680; // 320K (320*1024) bytes file
 		//var $m_DownloadBytesLimit = 409600; // 400K (400*1024) bytes file
+		var $m_DownloadBytesLimit = 614400; // 600K (600*1024) bytes file
+		//var $m_DownloadBytesLimit = 1048576; // 1MB (1024*1024) bytes file
 		var $m_RedirectLimit = 12; // Number of times to do the 302 redirect
 		var $m_UserAgent = 'Blubrry PowerPress';
 		var $m_error = '';
 		var $m_warnings = array();
 		var $m_ContentLength = false;
+		var $m_ContentType = '';
 		var $m_RedirectCount = 0;
 		Var $m_file_size_only = false;
 		
@@ -86,6 +89,14 @@
 		}
 		
 		/*
+		Get the content type of the file to download.
+		*/
+		function GetContentType()
+		{
+			return $this->m_ContentType;
+		}
+		
+		/*
 		Get the number of times we followed 30x header redirects
 		*/
 		function GetRedirectCount()
@@ -115,6 +126,7 @@
 			}
 			
 			$this->m_ContentLength = false;
+			$this->m_ContentType = '';
 			$this->m_RedirectCount = $RedirectCount;
 			
 			$urlParts = parse_url($url);
@@ -137,7 +149,7 @@
 			if ($fp)
 			{
 				// Create and send the request headers
-				$RequestHeaders = ($this->m_file_size_only?'HEAD ':'GET ').$urlParts['path'].(isset($urlParts['query']) ? '?'.@$urlParts['query'] : '')." HTTP/1.0\r\n";
+				$RequestHeaders = ($this->m_file_size_only?'HEAD ':'GET ').$urlParts['path'].(isset($urlParts['query']) ? '?'.$urlParts['query'] : '')." HTTP/1.0\r\n";
 				$RequestHeaders .= 'Host: '.$urlParts['host'].($urlParts['port'] != 80 ? ':'.$urlParts['port'] : '')."\r\n";
 				$RequestHeaders .= "Connection: Close\r\n";
 				$RequestHeaders .= "User-Agent: {$this->m_UserAgent}\r\n";
@@ -160,8 +172,10 @@
 					
 					$headers .= $line;
 					$line = rtrim($line); // Clean out the new line characters
-
-					list($key, $value) = explode(':', $line, 2);
+					$key = '';
+					$value = '';
+					if( strstr($line, ':') )
+						list($key, $value) = explode(':', $line, 2);
 					$key = trim($key);
 					$value = trim($value);
 					
@@ -175,7 +189,10 @@
 						if( $ReturnCode < 200 || $ReturnCode > 206 )
 						{
 							fclose($fp);
-							$this->SetError('HTTP '.$ReturnCode.$matches[2]);
+							if( $ReturnCode == 404 )
+								$this->SetError( __('The requested URL returned error code 404, file not found.', 'powerpress') );
+							else
+								$this->SetError( sprintf(__('The requested URL returned error code %d','powerpress'), $ReturnCode.$matches[2]) );
 							return false;
 						}
 					}
@@ -189,6 +206,9 @@
 							case 'content-length': {
 								$ContentLength = $value;
 							}; break;
+							case 'content-type' : {
+								$this->m_ContentType = $value;
+							}
 						}
 					}
         }
@@ -290,6 +310,7 @@
 			}
 			$Headers = curl_exec($curl);
 			$ContentLength = curl_getinfo($curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+			$this->m_ContentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
 			$HttpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 			$ContentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
 			$ErrorMsg = curl_error($curl);
@@ -323,6 +344,9 @@
 								$this->SetError( sprintf(__('Unable to obtain HTTP %d redirect URL.', 'powerpress'), $HttpCode) );
 							}
 						}
+					}; break;
+					case '404': {
+						$this->SetError( __('The requested URL returned error code 404, file not found.', 'powerpress') );
 					}; break;
 					default: {
 						$this->SetError( curl_error($curl) );
@@ -456,6 +480,10 @@
 		function GetMp3Info($File, $file_size_only = false)
 		{
 			$this->m_file_size_only = $file_size_only;
+			
+			if( version_compare(phpversion(), '5.0.5') < 0 ) // If version less than 5.0.5...
+				$this->m_file_size_only = true; // we can only get file size info if using older versions of PHP
+			
 			$DeleteFile = false;
 			if( strtolower( substr($File, 0, 7) ) == 'http://' )
 			{
@@ -463,17 +491,21 @@
 				if( $LocalFile === false )
 					return false;
 					
-				if( $file_size_only )
+				if( $this->m_file_size_only )
 					return true;
 					
 				$DeleteFile = true;
 			}
 			else
 			{
-				if( $file_size_only )
+				if( $this->m_file_size_only )
 				{
-					$this->m_ContentLength = filesize($File);
-					return true;
+					if( file_exists($File) )
+					{
+						$this->m_ContentLength = filesize($File);
+						return true;
+					}
+					return false;
 				}
 				$LocalFile = $File;
 			}
@@ -529,6 +561,12 @@
 				return false;
 			}
 			
+			//if( !preg_match('/(audio|video)/i', $this->GetContentType() ) )
+			//{
+			//	$this->SetError( sprintf(__('URL is reporting incorrect content type: %s', 'powerpress'), $this->GetContentType()) );
+			//	return false;
+			//}
+			
 			// Hack so this works in Windows, helper apps are not necessary for what we're doing anyway
 			define('GETID3_HELPERAPPSDIR', true);
 			require_once(POWERPRESS_ABSPATH.'/getid3/getid3.php');
@@ -543,12 +581,35 @@
 			{
 				if( isset($FileInfo['error']) )
 				{
+					// Speical case, if the content type does not include audio or video, report that as possible error...
+					
+					if( !preg_match('/(audio|video)/i', $this->GetContentType() ) )
+					{
+						$this->SetError( sprintf(__('Media URL reporting incorrect content type: %s', 'powerpress'), $this->GetContentType()) );
+						return false;
+					}
+					
 					$errors = '';
 					while( list($null,$error) = each($FileInfo['error']) )
+					{
+						if( strstr($error, 'error parsing') )
+							continue;
 						$errors .= " $error.";
-					$this->SetError( trim($errors) );
-					return false;
+					}
+					if( !empty($errors) )
+					{
+						$this->SetError( trim($errors) );
+						return false;
+					}
 				}
+				
+				if( false && isset($FileInfo['warning']) )
+				{
+					$errors = '';
+					while( list($null,$warning) = each($FileInfo['warning']) )
+						$this->AddWarning($warning );
+				}
+				
 				// Remove extra data that is not necessary for us to return...
 				//unset($FileInfo['mpeg']);
 				unset($FileInfo['audio']);
@@ -557,7 +618,15 @@
 				if( isset($FileInfo['id3v1']) )
 					unset($FileInfo['id3v1']);
 					
-				$FileInfo['playtime_seconds'] = round($FileInfo['playtime_seconds']);
+				if( !isset($FileInfo['playtime_seconds']) )
+					$FileInfo['playtime_seconds'] = '';
+				if( !isset($FileInfo['playtime_string']) )
+					$FileInfo['playtime_string'] = '';
+				
+				if( !empty($FileInfo['playtime_seconds']) )
+					$FileInfo['playtime_seconds'] = round($FileInfo['playtime_seconds']);
+				else
+					$FileInfo['playtime_seconds'] = 0;
 				
 				if( isset($FileInfo['mpeg']['audio']) && $FileInfo['mpeg']['audio'] )
 				{
@@ -568,11 +637,11 @@
 						$this->AddWarning( sprintf(__('Sample Rate %dKhz may cause playback issues, we recommend 22Khz or 44Khz for maximum player compatibility.', 'powerpress'), $Audio['sample_rate']/1000  ) );
 					}
 					
-					if( stristr($Audio['channelmode'], 'stereo' ) === false )
-					{
-						// Add warning here
-						$this->AddWarning( sprintf(__('Channel Mode \'%s\' may cause playback issues, we recommend \'joint stereo\' for maximum player compatibility.', 'powerpress'), trim($Audio['channelmode']) ) );
-					}
+					//if( stristr($Audio['channelmode'], 'stereo' ) === false )
+					//{
+					//	// Add warning here
+					//	$this->AddWarning( sprintf(__('Channel Mode \'%s\' may cause playback issues, we recommend \'joint stereo\' for maximum player compatibility.', 'powerpress'), trim($Audio['channelmode']) ) );
+					//}
 				}
 				
 				return $FileInfo;
