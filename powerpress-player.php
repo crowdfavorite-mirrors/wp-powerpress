@@ -36,8 +36,11 @@ function powerpressplayer_init($GeneralSettings)
 		powerpress_do_pinw($_GET['powerpress_pinw'], !empty($GeneralSettings['process_podpress']) );
 		
 	if( isset($_GET['powerpress_embed']) )
-		powerpress_do_embed($_GET['powerpress_player'], $_GET['powerpress_embed'], !empty($GeneralSettings['process_podpress']) );
-		
+	{
+		$player = ( !empty($_GET['powerpress_player']) ? $_GET['powerpress_player'] : 'default' );
+		powerpress_do_embed($player, $_GET['powerpress_embed'], !empty($GeneralSettings['process_podpress']) );
+	}
+	
 	// If we are to process podpress data..
 	if( !empty($GeneralSettings['process_podpress']) )
 	{
@@ -392,9 +395,12 @@ function powerpress_generate_embed($player, $EpisodeData) // $post_id, $feed_slu
 		}
 		
 		$extension = powerpressplayer_get_extension($EpisodeData['url']);
-		if( $extension == 'mp3' || $extension == 'm4a' )
+		if(  ($extension == 'mp3' || $extension == 'm4a') && empty($Settings['poster_image_audio']) )
 		{
 			$height = 24; // Hack for audio to only include the player without the poster art
+			$width = 320;
+			if( !empty($GeneralSettings['player_width_audio']) )
+				$width = $GeneralSettings['player_width_audio'];
 		}
 	}
 	
@@ -497,6 +503,7 @@ function powerpressplayer_in_embed($player, $media_url, $EpisodeData = array())
 	$content .= '<head>'. PHP_EOL;
 	$content .= '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />'. PHP_EOL;
 	$content .= '<title>'. __('Blubrry PowerPress Player', 'powerpress') .'</title>'. PHP_EOL;
+	$content .= '<meta name="robots" content="noindex" />'. PHP_EOL;
 	$content .= '<script type="text/javascript" src="'. powerpress_get_root_url() .'player.js"></script>'. PHP_EOL;
 	// Include jQuery for convenience
 	$content .= '<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>'. PHP_EOL;
@@ -553,6 +560,9 @@ function powerpressplayer_in_embed($player, $media_url, $EpisodeData = array())
 	{
 		case 'default':
 		case 'flow-player-classic': {
+		
+			if( !is_array($EpisodeData) )
+				$EpisodeData = array();
 
 			$content .= powerpressplayer_build_flowplayerclassic($media_url, $EpisodeData + array('jquery_autowidth'=>true) );
 			
@@ -1017,20 +1027,22 @@ function powerpressplayer_embedable($media_url, $ExtraData = array())
 		{
 			case 'mp3':
 			case 'm4a': {
-				if( $GeneralSettings['player'] == 'default' )
-					$player = $GeneralSettings['player'];
-			
+				//if( $GeneralSettings['player'] == 'default' )
+				//	$player = $GeneralSettings['player'];
+				$player = 'default';
 			}; break;
 			case 'mp4':
 			case 'm4v': {
-				if( $GeneralSettings['video_player'] == 'flow-player-classic' || $GeneralSettings['video_player'] == 'html5video' )
-					$player = $GeneralSettings['video_player'];
+				//if( $GeneralSettings['video_player'] == 'flow-player-classic' || $GeneralSettings['video_player'] == 'html5video' )
+				//	$player = $GeneralSettings['video_player'];
+				$player = 'html5video';
 			}; break;
 			case 'webm':
 			case 'ogg':
 			case 'ogv': {
-				if( $GeneralSettings['video_player'] == 'html5video' )
-					$player = $GeneralSettings['video_player'];
+				//if( $GeneralSettings['video_player'] == 'html5video' )
+				//	$player = $GeneralSettings['video_player'];
+				$player = 'html5video';
 			}; break;
 		}
 	}
@@ -1115,6 +1127,7 @@ function powerpress_do_pinw($pinw, $process_podpress)
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<title><?php echo __('Blubrry PowerPress Player', 'powerpress'); ?></title>
+	<meta name="robots" content="noindex" />
 <?php 
 
 	if( defined('POWERPRESS_ENQUEUE_SCRIPTS') )
@@ -1440,7 +1453,17 @@ function powerpressplayer_build_flowplayerclassic($media_url, $EpisodeData = arr
 	
 	$content .= "pp_flashembed(\n";
 	$content .= "	'powerpress_player_{$player_id}',\n";
-	$content .= "	{src: '". powerpress_get_root_url() ."FlowPlayerClassic.swf', width: '{$player_width}', height: '{$player_height}', wmode: 'transparent' },\n";
+	
+	$content .= "	{src: '". powerpress_get_root_url() ."FlowPlayerClassic.swf', ";
+	if( preg_match('/^jQuery\(/', $player_width) ) // Only add single quotes if jQuery( ... is not in the value
+		$content .= "width: {$player_width}, ";
+	else
+		$content .= "width: '{$player_width}', ";
+	if( preg_match('/^jQuery\(/', $player_height) ) // Only add single quotes if jQuery( ... is not in the value
+		$content .= "height: {$player_height}, ";
+	else
+		$content .= "height: '{$player_height}', ";
+	$content .= "wmode: 'transparent' },\n";
 	if( $cover_image )
 		$content .= "	{config: { autoPlay: ". ($autoplay?'true':'false') .", autoBuffering: false, showFullScreenButton: ". (preg_match('/audio\//', $EpisodeData['type'])?'false':'true' ) .", showMenu: false, videoFile: '{$media_url}', splashImageFile: '{$cover_image}', scaleSplash: true, loop: false, autoRewind: true } }\n";
 	else
