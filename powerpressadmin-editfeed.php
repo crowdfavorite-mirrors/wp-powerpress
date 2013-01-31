@@ -63,6 +63,7 @@ function powerpress_languages()
 	$langs['de-ch'] = __('German (Switzerland)', 'powerpress');
 	$langs['el'] = __('Greek', 'powerpress');
 	$langs['haw'] = __('Hawaiian', 'powerpress');
+	$langs['he_IL'] = __('Hebrew', 'powerpress');
 	$langs['hu'] = __('Hungarian', 'powerpress');
 	$langs['is'] = __('Icelandic', 'powerpress');
 	$langs['in'] = __('Indonesian', 'powerpress');
@@ -416,7 +417,12 @@ function powerpressadmin_edit_feed_settings($FeedSettings, $General, $cat_ID = f
 <?php if( $cat_ID ) { ?>
 <p style="margin-top: 0;"><a href="<?php echo get_category_feed_link($cat_ID); ?>" target="_blank"><?php echo get_category_feed_link($cat_ID); ?></a> | <a href="http://www.feedvalidator.org/check.cgi?url=<?php echo urlencode( str_replace('&amp;', '&', get_category_feed_link($cat_ID))); ?>" target="_blank"><?php echo __('validate', 'powerpress'); ?></a></p>
 <?php } else { ?>
-<p style="margin-top: 0;"><a href="<?php echo get_feed_link($feed_slug); ?>" target="_blank"><?php echo get_feed_link($feed_slug); ?></a> | <a href="http://www.feedvalidator.org/check.cgi?url=<?php echo urlencode(get_feed_link($feed_slug)); ?>" target="_blank"><?php echo __('validate', 'powerpress'); ?></a></p>
+<p style="margin-top: 0;"><a href="<?php echo get_feed_link($feed_slug); ?>" target="_blank"><?php echo get_feed_link($feed_slug); ?></a><?php if( empty($FeedSettings['premium']) ) { ?> | <a href="http://www.feedvalidator.org/check.cgi?url=<?php echo urlencode(get_feed_link($feed_slug)); ?>" target="_blank"><?php echo __('validate', 'powerpress'); ?></a><?php } ?></p>
+	<?php
+		if( !empty($FeedSettings['premium']) )
+		{
+			echo __('WARNING: This feed is password protected, it cannot be accessed by public services such as feedvalidator.org or the iTunes podcast directory.', 'powerpress');
+		} ?>
 <?php } ?>
 </td>
 </tr>
@@ -487,10 +493,17 @@ if( $feed_slug || $cat_ID )
 
 <tr valign="top">
 <th scope="row">
-<?php echo __('FeedBurner Feed URL', 'powerpress'); ?>
+<?php echo __('FeedBurner Feed URL', 'powerpress'); ?><br />
+<span style="font-size: 85%; margin-left: 5px;"><?php echo __('Recommendation: leave blank', 'powerpress'); ?></span>
 </th>
 <td>
-<input type="text" name="Feed[feed_redirect_url]"style="width: 60%;"  value="<?php echo (!empty($FeedSettings['feed_redirect_url'])? $FeedSettings['feed_redirect_url']:''); ?>" maxlength="100" />  (<?php echo __('leave blank to use current feed', 'powerpress'); ?>)
+<input type="text" name="Feed[feed_redirect_url]"style="width: 60%;"  value="<?php echo (!empty($FeedSettings['feed_redirect_url'])? $FeedSettings['feed_redirect_url']:''); ?>" maxlength="100" />  (<?php echo __('leave blank to use built-in feed', 'powerpress'); ?>)
+
+<p style="margin-top: 0px; margin-bottomd: 0;"><?php echo powerpressadmin_notice( __('NOTE: FeedBurner is not required for podcasting.', 'powerpress') ); ?> <br /> 
+<?php echo powerpressadmin_notice( __('No support is available from blubrry if you are using Feedburner or other feed hosted services.', 'powerpress') ); ?><br /> 
+<a href="http://www.podcastfaq.com/syndicating-your-podcast/feedburner-for-podcasting/" target="_blank"><?php echo __('Learn more about FeedBurner and Podcasitng', 'powerpress'); ?></a>
+</p>
+
 <p><?php echo __('Use this option to redirect this feed to a hosted feed service such as FeedBurner.', 'powerpress'); ?></p>
 <?php
 if( $cat_ID )
@@ -546,6 +559,7 @@ else
 <tr valign="top">
 <th scope="row">
 <?php echo __('RSS2 Image', 'powerpress'); ?> <br />
+<span style="font-size: 85%; margin-left: 5px;"><?php echo __('Recommendation: Use iTunes image', 'powerpress'); ?></span>
 </th>
 <td>
 <input type="text" id="rss2_image" name="Feed[rss2_image]" style="width: 60%;" value="<?php echo ( !empty($FeedSettings['rss2_image'])? $FeedSettings['rss2_image']:''); ?>" maxlength="250" />
@@ -562,6 +576,9 @@ else
 	<label for="rss2_image"><?php echo __('Choose file', 'powerpress'); ?>:</label><input type="file" name="rss2_image_file"  />
 </div>
 <?php } ?>
+	<div>
+	<?php echo powerpressadmin_notice( __('Note: Do not forget to configure your iTunes image in the next tab, which may be used as your RSS image as well.', 'powerpress') ); ?>
+	</div>
 </td>
 </tr>
 
@@ -581,11 +598,14 @@ while( list($value,$desc) = each($Languages) )
 ?>
 </select>
 <?php
-	$rss_language = get_option('rss_language');
+	$rss_language = get_bloginfo_rss('language');
+	$rss_language = strtolower($rss_language);
 if( isset($Languages[ $rss_language ]) )
 {
 ?>
  <?php echo __('Blog Default', 'powerpress'); ?>: <?php echo $Languages[ $rss_language ]; ?>
+ <?php } else {  ?>
+<?php echo __('Blog Default', 'powerpress'); ?>: <?php echo $rss_language; ?>
  <?php } ?>
 </td>
 </tr>
@@ -703,15 +723,15 @@ function powerpressadmin_edit_basics_feed($General, $FeedSettings, $feed_slug, $
 
 <?php echo __('Protect Content', 'powerpress'); ?></th>
 <td>
-	<p style="margin-top: 5px;"><input type="checkbox" name="ProtectContent" value="1" <?php echo ($FeedSettings['premium']?'checked ':''); ?> onchange="powerpress_toggle_premium_content(this.checked);" /> <?php echo __('Require user to be signed-in to access feed.', 'powerpress'); ?></p>
+	<p style="margin-top: 5px;"><input type="checkbox" name="ProtectContent" value="1" <?php echo ( !empty($FeedSettings['premium']) ?'checked ':''); ?> onchange="powerpress_toggle_premium_content(this.checked);" /> <?php echo __('Require user to be signed-in to access feed.', 'powerpress'); ?></p>
 <?php ?>
-	<div style="margin-left: 20px; display: <?php echo ($FeedSettings['premium']?'block':'none'); ?>;" id="premium_role"><?php echo __('User must have the following capability', 'powerpress'); ?>:
+	<div style="margin-left: 20px; display: <?php echo ( !empty($FeedSettings['premium'])?'block':'none'); ?>;" id="premium_role"><?php echo __('User must have the following capability', 'powerpress'); ?>:
 <select name="Feed[premium]" class="bpp_input_med">
 <?php
 			$caps = powerpress_admin_capabilities();
-			$actual_premium_value = $FeedSettings['premium'];
-			if( !isset($FeedSettings['premium']) || $FeedSettings['premium'] == '' )
-				$actual_premium_value = 'premium_content';
+			$actual_premium_value = 'premium_content';
+			if( !empty($FeedSettings['premium']) )
+				$actual_premium_value = $FeedSettings['premium'];
 			
 			echo '<option value="">'.  __('None', 'powerpress') .'</option>';
 			while( list($value,$desc) = each($caps) )
@@ -721,7 +741,7 @@ function powerpressadmin_edit_basics_feed($General, $FeedSettings, $feed_slug, $
 </td>
 </tr>
 </table>
-<div id="protected_content_message" style="display: <?php echo ($FeedSettings['premium']?'block':'none'); ?>;">
+<div id="protected_content_message" style="display: <?php echo ( !empty($FeedSettings['premium'])?'block':'none'); ?>;">
 <script language="Javascript" type="text/javascript"><!--
 function powerpress_toggle_premium_content(enabled)
 {
@@ -730,7 +750,7 @@ function powerpress_toggle_premium_content(enabled)
 }	
 function powerpress_premium_label_append_signin_link()
 {
-	jQuery('#premium_label').val( jQuery('#premium_label').val() + '<a href="<?php echo get_settings('siteurl'); ?>/wp-login.php" title="<?php echo __('Sign In', 'powerpress'); ?>"><?php echo __('Sign In', 'powerpress'); ?><\/a>'); 
+	jQuery('#premium_label').val( jQuery('#premium_label').val() + '<a href="<?php echo get_option('siteurl'); ?>/wp-login.php" title="<?php echo __('Sign In', 'powerpress'); ?>"><?php echo __('Sign In', 'powerpress'); ?><\/a>'); 
 }
 function powerpress_default_premium_label(event)
 {
@@ -1063,10 +1083,10 @@ while( list($value,$desc) = each($explicit) )
 <p><?php echo __('iTunes image should be at least 1400 x 1400 pixels in .jpg or .png format using RGB color space.', 'powerpress'); ?> <?php echo __('Example', 'powerpress'); ?>: http://example.com/images/itunes.jpg
  </p>
 
-<p><strong><?php echo __('A square image that is 1400 x 1400 pixels in .jpg format is recommended.', 'powerpress'); ?></strong></p>
+<p><strong><?php echo __('A square image that is 1400 x 1400 pixels in .jpg format for the web (72ppi) is recommended.', 'powerpress'); ?></strong></p>
 
 <p>
-<?php echo __('This image is for your listing on the iTunes podcast directory and may also be used by other directories such as Zune and Blubrry. It is not the artwork that is displayed during episode playback. That artwork needs to be saved into the media file in the form of tags (ID3 tags for mp3) following the production of the media file.', 'powerpress'); ?>
+<?php echo __('This image is for your listing on the iTunes podcast directory and may also be used by other directories like Blubrry. It is not the artwork that is displayed during episode playback. That artwork needs to be saved into the media file in the form of tags (ID3 tags for mp3) following the production of the media file.', 'powerpress'); ?>
 </p>
 
 <p><?php echo __('Note: If you change the iTunes image without changing the file name it may take some time (days or even months) for iTunes to update the image in the iTunes Podcast Directory.', 'powerpress'); ?> 

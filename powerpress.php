@@ -3,7 +3,7 @@
 Plugin Name: Blubrry PowerPress
 Plugin URI: http://www.blubrry.com/powerpress/
 Description: <a href="http://www.blubrry.com/powerpress/" target="_blank">Blubrry PowerPress</a> adds podcasting support to your blog. Features include: media player, 3rd party statistics, iTunes integration, Blubrry Services (Media Statistics and Hosting) integration and a lot more.
-Version: 4.0
+Version: 4.0.6
 Author: Blubrry
 Author URI: http://www.blubrry.com/
 Change Log:
@@ -33,7 +33,7 @@ if( !function_exists('add_action') )
 	die("access denied.");
 	
 // WP_PLUGIN_DIR (REMEMBER TO USE THIS DEFINE IF NEEDED)
-define('POWERPRESS_VERSION', '4.0' );
+define('POWERPRESS_VERSION', '4.0.6' );
 
 // Translation support:
 if ( !defined('POWERPRESS_ABSPATH') )
@@ -72,7 +72,13 @@ if( !defined('POWERPRESS_BLUBRRY_API_URL') )
 
 if( !defined('POWERPRESS_CONTENT_ACTION_PRIORITY') )
 	define('POWERPRESS_CONTENT_ACTION_PRIORITY', 10 );
-
+	
+// Added so administrators can customize what capability is needed for PowerPress
+if( !defined('POWERPRESS_CAPABILITY_MANAGE_OPTIONS') )
+	define('POWERPRESS_CAPABILITY_MANAGE_OPTIONS', 'manage_options');
+if( !defined('POWERPRESS_CAPABILITY_EDIT_PAGES') )
+	define('POWERPRESS_CAPABILITY_EDIT_PAGES', 'edit_pages');
+	
 //define('POWERPRESS_ENQUEUE_SCRIPTS', true); // Add this define to your wp-config.php if you want the audio.js enqueued with other plugin scripts in your blog.
 
 //define('POWERPRESS_ENABLE_HTTPS_MEDIA', true); // Add this define to your wp-config.php if you wnat to allow media URLs that begin with https://
@@ -100,6 +106,9 @@ function powerpress_content($content)
 	if( defined('PODPRESS_VERSION') || isset($GLOBALS['podcasting_player_id']) || isset($GLOBALS['podcast_channel_active']) || defined('PODCASTING_VERSION') )
 		return $content;
 		
+	if( empty($post->ID) || !is_object($post) )
+		return $content;
+		
 	if( defined('POWERPRESS_DO_ENCLOSE_FIX') )
 		$content = preg_replace('/\<!--.*added by PowerPress.*-->/im', '', $content );
 	
@@ -118,6 +127,14 @@ function powerpress_content($content)
 	// No player or links to add to content...
 	if( !empty($GeneralSettings['disable_appearance']) )
 		return $content;
+		
+	// check for themes/plugins where we know we need to do this...
+	if( !empty($GLOBALS['fb_ver']) && version_compare($GLOBALS['fb_ver'], '1.0',  '<=')	) {
+		$GeneralSettings['player_aggressive'] = true;
+	}
+	if( defined('JETPACK__VERSION') && version_compare(JETPACK__VERSION, '2.0',  '>=')	) {
+		$GeneralSettings['player_aggressive'] = true;
+	}
 	
 	if( !empty($GeneralSettings['player_aggressive']) )
 	{
@@ -439,14 +456,19 @@ function powerpress_rss2_head()
 	if( !empty($Feed['itunes_keywords']) )
 		echo "\t".'<itunes:keywords>' . powerpress_format_itunes_value($Feed['itunes_keywords'], 'keywords') . '</itunes:keywords>'.PHP_EOL;
 		
-	if( !empty($Feed['rss2_image']) )
+	if( !empty($Feed['rss2_image']) || !empty($Feed['itunes_image']) )
 	{
+		if( !empty($Feed['rss2_image']) ) // If the RSS image is set, use it, otherwise use the iTunes image...
+			$rss_image = $Feed['rss2_image'];
+		else
+			$rss_image = $Feed['itunes_image'];
+		
 		echo "\t". '<image>' .PHP_EOL;
 		if( is_category() && !empty($Feed['title']) )
 			echo "\t\t".'<title>' . esc_html( get_bloginfo_rss('name') ) . '</title>'.PHP_EOL;
 		else
 			echo "\t\t".'<title>' . esc_html( get_bloginfo_rss('name') . get_wp_title_rss() ) . '</title>'.PHP_EOL;
-		echo "\t\t".'<url>' . esc_html( str_replace(' ', '+', $Feed['rss2_image'])) . '</url>'.PHP_EOL;
+		echo "\t\t".'<url>' . esc_html( str_replace(' ', '+', $rss_image)) . '</url>'.PHP_EOL;
 		echo "\t\t".'<link>'. $Feed['url'] . '</link>' . PHP_EOL;
 		echo "\t".'</image>' . PHP_EOL;
 	}
@@ -847,7 +869,7 @@ function powerpress_bloginfo_rss($content, $field = '')
 			switch( $field )
 			{
 				case 'description': {
-					if( isset($Feed['description']) && $Feed['description'] != '' )
+					if( !empty($Feed['description']) )
 						return $Feed['description'];
 					else if( is_category() )
 					{
@@ -857,17 +879,25 @@ function powerpress_bloginfo_rss($content, $field = '')
 					}
 				}; break;
 				case 'url': {
-					if( isset($Feed['url']) && $Feed['url'] != '' )
+					if( !empty($Feed['url']) )
 						return trim($Feed['url']);
 					else if( is_category() )
 						return get_category_link( get_query_var('cat') );
 				}; break;
-				case 'name':
-				default: {
-					if( isset($Feed['title']) && $Feed['title'] != '' )
+				case 'name': {
+					if( !empty($Feed['title']) )
 						return $Feed['title'];
 				}; break;
-			
+				case 'language': {
+					// Get the feed language
+					$lang = '';
+					if( isset($Feed['rss_language']) && $Feed['rss_language'] != '' )
+						$lang = $Feed['rss_language'];
+					if( strlen($lang) == 5 )
+						$lang = substr($lang,0,3) .  strtoupper( substr($lang, 3) ); // Format example: en-US for English, United States
+					if( !empty($lang) )
+						return $lang;
+				}; break;
 			}
 		}
 	}
@@ -898,23 +928,29 @@ function powerpress_wp_title_rss($title)
 
 add_filter('wp_title_rss', 'powerpress_wp_title_rss');
 
-function powerpress_rss_language($value)
+
+// Following code only works for WP 3.3 or older. WP 3.4+ now uses the get_locale setting, so we have to override directly in the get_bloginfo_rss functoin.
+if( version_compare($GLOBALS['wp_version'], '3.4', '<') )
 {
-	if( powerpress_is_custom_podcast_feed() )
+	function powerpress_rss_language($value)
 	{
-		global $powerpress_feed;
-		if( $powerpress_feed && isset($powerpress_feed['rss_language']) && $powerpress_feed['rss_language'] != '' )
-			$value = $powerpress_feed['rss_language'];
+		if( powerpress_is_custom_podcast_feed() )
+		{
+			global $powerpress_feed;
+			if( $powerpress_feed && isset($powerpress_feed['rss_language']) && $powerpress_feed['rss_language'] != '' )
+				$value = $powerpress_feed['rss_language'];
+		}
+		return $value;
 	}
-	return $value;
+
+	add_filter('option_rss_language', 'powerpress_rss_language');
 }
-
-add_filter('option_rss_language', 'powerpress_rss_language');
-
 
 function powerpress_do_podcast_feed($for_comments=false)
 {
-	global $wp_query;
+	global $wp_query, $powerpress_feed;
+	
+	powerpress_is_podcast_feed(); // Loads the feed settings if not already loaded...
 	
 	$GeneralSettings = get_option('powerpress_general');
 	if( isset($GeneralSettings['premium_caps']) && $GeneralSettings['premium_caps'] )
@@ -933,7 +969,7 @@ function powerpress_do_podcast_feed($for_comments=false)
 	}
 	
 	//$wp_query->get_posts(); // No longer needed as it duplicates the existing get posts query already performed
-	if( !empty($GeneralSettings['episode_box_feature_in_itunes']) ||  !empty($GeneralSettings['feature_in_itunes'])  )
+	if( !empty($GeneralSettings['episode_box_feature_in_itunes']) ||  !empty($powerpress_feed['maximize_feed'])  )
 	{
 		// Use the template for the always featured option
 		load_template( POWERPRESS_ABSPATH . '/feed-podcast.php' );
@@ -1088,6 +1124,42 @@ function powerpress_init()
 
 add_action('init', 'powerpress_init', -100); // We need to add the feeds before other plugins start screwing with them
 
+function powerpress_request($qv)
+{
+	if( !empty($qv['feed']) )
+	{
+		$podcast_feed_slug = false;
+		if( $qv['feed'] == 'podcast' ) {
+			$podcast_feed_slug = 'podcast';
+		} else if( $qv['feed'] == 'rss' || $qv['feed'] == 'rss2' || $qv['feed'] == 'atom' || $qv['feed'] == 'rdf' || $qv['feed'] == 'feed' ) { //  'feed', 'rdf', 'rss', 'rss2', 'atom'
+			// Skip
+		} else {
+			$GeneralSettings = get_option('powerpress_general');
+			if( isset($GeneralSettings['custom_feeds']) && is_array($GeneralSettings['custom_feeds']) && !empty($GeneralSettings['custom_feeds'][ $qv['feed'] ] ) )
+				$podcast_feed_slug = $qv['feed'];
+		}
+		
+		if( $podcast_feed_slug )
+		{
+			if( $qv['feed'] == 'podcast' )
+				$qv['post_type'] = 'post';
+			else {
+				$qv['post_type'] = get_post_types( array('public'=> true, 'capability_type'=>'post') );
+				if( !empty($qv['post_type']['attachment']) )
+					unset($qv['post_type']['attachment']);
+			}
+			
+			$FeedCustom = get_option('powerpress_feed_'.$podcast_feed_slug); // Get custom feed specific settings
+			// See if the user set a custom post type only...
+			if( !empty($FeedCustom) && !empty( $FeedCustom['custom_post_type']) )
+				$qv['post_type'] = $FeedCustom['custom_post_type'];
+		}
+	}
+	return $qv;
+}
+
+add_filter('request', 'powerpress_request');
+
 // May be used for future use
 /*
 function powerpress_plugins_loaded()
@@ -1117,7 +1189,7 @@ function powerpress_load_general_feed_settings()
 			$FeedSettingsBasic = get_option('powerpress_feed'); // Get overall feed settings
 				
 			// If we're in advanced mode and we're dealing with a category feed we're extending, lets work with it...
-			if( is_category() && is_array($GeneralSettings['custom_cat_feeds']) && in_array( get_query_var('cat'), $GeneralSettings['custom_cat_feeds']) )
+			if( is_category() && isset($GeneralSettings['custom_cat_feeds']) && is_array($GeneralSettings['custom_cat_feeds']) && in_array( get_query_var('cat'), $GeneralSettings['custom_cat_feeds']) )
 			{
 				$cat_ID = get_query_var('cat');
 				$FeedCustom = get_option('powerpress_cat_feed_'.$cat_ID); // Get custom feed specific settings
@@ -1290,6 +1362,7 @@ function powerpress_posts_join($join)
 		$join .= " INNER JOIN {$wpdb->postmeta} ";
 		$join .= " ON {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id ";
 	}
+
   return $join;
 }
 
@@ -1758,8 +1831,17 @@ function powerpress_itunes_categories($PrefixSubCategories = false)
 
 function powerpress_get_root_url()
 {
+	/*
+	// OLD CODE:
 	$powerpress_dirname = basename( POWERPRESS_ABSPATH );
 	return WP_PLUGIN_URL . '/'. $powerpress_dirname .'/';
+	*/
+	$local_path = __FILE__;
+	if( DIRECTORY_SEPARATOR == '\\' ) { // Win32 fix
+		$local_path = basename(dirname(__FILE__)) .'/'. basename(__FILE__);
+	}
+	$plugin_url = plugins_url('', $local_path);
+	return $plugin_url . '/';
 }
 
 function powerpress_format_itunes_value($value, $tag)
@@ -2100,6 +2182,22 @@ function powerpress_get_enclosure_data($post_id, $feed_slug = 'podcast')
 				
 			if( isset($Data['webm_src']) )
 				$Data['webm_src'] = powerpress_add_redirect_url( trim($Data['webm_src']) );
+				
+			if( strpos($MetaParts[0], 'http://') !== 0 && !empty($Data['hosting']) ) // if the URL is not set (just file name) and we're a hosting customer...
+			{
+				$post_status = get_post_status($post_id);
+				switch( $post_status )
+				{
+					case 'pending':
+					case 'draft':
+					case 'auto-draft': {
+						// Determine if audio or video, then set the demo episode here...
+						$Data['url'] = 'http://media.blubrry.com/blubrry/content.blubrry.com/blubrry/preview.mp3'; // audio
+						if( strstr($Data['type'], 'video') )
+							$Data['url'] = 'http://media.blubrry.com/blubrry/content.blubrry.com/blubrry/preview.mp4'; // video
+					}; break;
+				}
+			}
 		}
 	}
 	
