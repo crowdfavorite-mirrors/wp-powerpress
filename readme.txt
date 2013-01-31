@@ -2,8 +2,8 @@
 Contributors: Angelo Mandato, Blubrry.com
 Tags: podcasting, podcast, podcaster, itunes, enclosure, zune, iphone, youtube, viddler, blip.tv, ustream, podcasting, audio, video, rss2, feed, player, media, rss, mp3, music, embed, feedburner, statistics, stats, flv, flash, id3, episodes, blubrry, webm, mp4, m4v, wordpressmu, mu, wordpress mu, mediacaster, post, plugin, posts, simple, social, dashboard, TSG, Buzzsprout, MTR, WP-boxCast, CastMyBlog
 Requires at least: 3.0
-Tested up to: 3.3.2
-Stable tag: 4.0
+Tested up to: 3.5
+Stable tag: 4.0.6
 
 Blubrry PowerPress brings the essential features for podcasting to WordPress including full iTunes support, web audio/video media players and more.
 
@@ -26,7 +26,7 @@ Switching to PowerPress is seamless, just enable PowerPress then disable PodPres
 - Multi-podcast support: Create separate podcasts by category (category casting) or by media format (Podcast Channels).
 - Supported Media Formats: mp3, m4a, mp4, m4v, webm, ogg, oga, ogv, wma, ra, mp4a, m4v, mp4v, mpg, asf, avi, wmv, flv, swf, mov, divx, 3gp, midi, wav, aa, pdf, torrent, m4b, m4r, epub.
 - *Media Statistics: Get FREE Blubrry Media Statistics from your WordPress dashboard.
-* Languages supported: English, Danish, French, Simplified Chinese ([Want to translate PowerPress?](http://www.blubrry.com/powerpress_translate/))
+* Languages supported: English, Danish, French, Simplified Chinese, Italian ([Want to translate PowerPress?](http://www.blubrry.com/powerpress_translate/))
 
 *The Blubrry basic statistics service is FREE. Our [Premium Statistics Service](https://secure.blubrry.com/podcast-statistics-premium/), which includes U.S. downloads, trending and exporting, is available for $5 month.
 
@@ -42,7 +42,7 @@ iTunes can make up between 50 and 95 percent of a podcaster's audience. PowerPre
 Blubrry PowerPress includes extensive web player options to display your podcast audio and video in your web pages.
 
 * 6 Audio Players: Pick from 6 audio players including the popular [1 Pixel Out Player](http://wpaudioplayer.com/whatsnew) and HTML5 audio player.
-* 2 Video Players: Pick between HTML5 video or Flow Player Classic Flash player.
+* 3 Video Players: Pick between HTML5 video, Flow Player Classic Flash player or [VideoJS](http://wordpress.org/extend/plugins/videojs-html5-video-player-for-wordpress/).
 * Position player above or below your post content or use the`[powerpress]` shortcode and position the player where you want.
 * Place the player exactly where you want by adding the [powerpress] shortcode tag directly in your post content.
 * Add video embeds from sites such as YouTube, Viddler, Blip.tv and Ustream.tv.
@@ -98,6 +98,16 @@ PowerPress will continue where plugin your old plugin left off by including your
 
 == Frequently Asked Questions ==
 
+
+ = Related Plugins =
+ The following plugins may be used in conjunction with PowerPress.
+ 
+ * [Message Flow](http://wordpress.org/extend/plugins/message-flow/) - generates a CoverFlow-like interface for your blog posts with podcast episodes. For podcasts, use shortocde `[message-flow podcasts_only="true"]`.
+ * [Eli's PowerPress Addon Widget](http://wordpress.org/extend/plugins/podpress-addons/) - Adds a sidebar widget that lists your podcast episodes linked to the play in a new window PowerPress player.
+ * [PowerPress Posts From MySQL](http://wordpress.org/extend/plugins/powerpress-posts-from-mysql/developers/) - Creates blog posts with PowerPress podcast episode information from a MySQL table.
+ * [Subscribe Sidebar plugin by Blubrry](http://wordpress.org/extend/plugins/subscribe-sidebar/) - A sidebar widget that provides a list of "Subscribe" links to your sidebar.
+ 
+ 
  = Why doesn't Blubrry PowerPress support multiple enclosures in one feed item/post? =
 Blubrry PowerPress does not allow you to include multiple media files for one feed item (blog post). This is because each podcatcher handles multiple enclosures in feeds differently. iTunes will download the first enclosure that it sees in the feed ignoring the rest. Other podcatchers and podcasting directories either pick up the first enclosure or the last in each post item. This inconsistency combined with the fact that [Dave Winer does not recommend multiple enclosures](http://www.reallysimplesyndication.com/2004/12/21) and the [FeedValidator.org recommendation against it](http://www.feedvalidator.org/docs/warning/DuplicateEnclosure.html) is why the Blubrry PowerPress does not support them.
 
@@ -106,7 +116,7 @@ As a alternative, PowerPress allows you to create additional Custom Podcast Feed
  = Why doesn't Blubrry PowerPress include media statistics built-in? =
  Blubrry PowerPress does not include media statistics built-in. This is not because Blubrry has its own statistics service, although that's a good reason by itself. Maintaining and calculating statistics is a resource and server intensive task that would add bloat to an otherwise efficient WordPress podcasting plugin. We recommend using your media hosting's web statistics to give you basic download numbers and, if you are seeking more grandular measurements such as client and geographical information for each episode, you're more than welcome to use the [Blubrry Statistics service](http://www.blubrry.com/podcast_statistics/) as well.
  
- As of Blubrry PowerPress version 0.8, you may now access your Blubrry Statistics from within your WordPress dashboard.
+ You may however access your Blubrry Statistics from within your WordPress dashboard.
  
  = How do you insert the player within a blog post? =
 You can insert the media player within yoru blog posts by using the WordPress shortcode feature. The shortcode for PowerPress is [powerpress] (all lowercase)
@@ -122,6 +132,9 @@ You can insert the media player within yoru blog posts by using the WordPress sh
 
  = Will you be upgrading the version of Flow Player to 3.x? =
  Because of the feature restrictions and branding that FlowPlayer.org places on FlowPlayer 3.x versions, we do not plan on updating the player packaged with PowerPress. The **PAID open-source** FlowPlayer is not compatible with the **FREE open source** PowerPress plugin.
+
+
+
 
 == Installation ==
 To install Blubrry PowerPress manually, follow these steps:
@@ -143,6 +156,83 @@ To install Blubrry PowerPress manually, follow these steps:
 = Announcement =
 * PowerPress 3.0 is not compatible with WordPress 2.8.x and 2.9.x. Please upgrade to WordPress 3.0 or newer to install PowerPress.
 * Translation support is now complete. Please visit the following link if you would like to have a version in your language: [http://www.blubrry.com/powerpress_translate/](http://www.blubrry.com/powerpress_translate/)
+
+
+= 4.0.6 =
+* Released on 1/23/2013
+* Everyone is **strongly encouraged to update their copy of PowerPress immediately!**
+* Due to concerns of possible security exploits, the 1 Pixel Out Audio Player has been removed from PowerPress. [Learn More](http://blog.blubrry.com/?p=1163)
+* Notices added in both the WP dashboard and in the Audio player settings page that the 1 Pixel Out player has been removed.
+* If you've configured your web site with the 1 Pixel Out Audio Player, Flow Player Classic will be used. Go to the PowerPress > Audio Player settings page to change this player if you like.
+* Updated Danish translation. Thanks GeorgWP and Team Blogos for translating!
+* Added Russian translation. Thanks Igor Mercury for translating!
+
+
+= 4.0.5 =
+* Released on 11/28/2012
+* Tested with WordPress 3.5 Release Candidate 1
+* Updated button styling to fix styling issue for future release of WordPress 3.5
+* Updated the "Plugins Update Cache" logic for WordPress versions 3.4+
+* Updated link to add podcast to iTunes.
+* Updated Danish translation. Thanks GeorgWP and Team Blogos for translating!
+* Added define options `POWERPRESS_CAPABILITY_MANAGE_OPTIONS` and `POWERPRESS_CAPABILITY_EDIT_PAGES` for administrators to customize PowerPress capabilities. (Thanks Kevin Doole for the contribution!)
+* Updated videos for previewing the PowerPress video players.
+* Added preview media for hosting customers when media is not yet published.
+* Added logic to auto enable "fix theme" feature if JetPack 2.0 is used, solves issue where PowerPress player and links disappear using JetPack 2.0. (Thanks Brian from Handy Guys Podcast for diagnosing the problem)
+* Added `is_object` test in the `powerpress_content` function to prevent possible debug messages in development environments. (Thanks Curtis McHale for bringing to our attention)
+* Added link to [Message Flow](http://wordpress.org/extend/plugins/message-flow/) plugin, adds a CoverFlow-like interface for your blog posts with podcast episodes. For podcasts only, use shortocde: `[message-flow podcasts_only="true"]`
+* Added warning about FeedBurner is not required to podcast and note that iTunes 1400x1400 jpg image should be 72ppi format for viewing on the web.
+* Removed possible notice messages in the importing tools pages or when metabox option player or links is configured.
+* Provide Embeds option now works no matter which players you configure. (Thanks Daniel Lewis for letting us know about the issue).
+* Added better error message when users try to setup blubrry services integration.
+* Added note under RSS Image to remind new users to also configure their iTunes image, which is very important.
+* Added better explanation for the missing player fix option under the appearance tab.
+* Removed mentions of Zune, that podcast directory is no longer available.
+
+
+= 4.0.4 =
+* Released on 8/8/2012
+* Fix bug with language not getting set if your using the Feed Episode Maximizer option with WordPress 3.4 or newer.
+
+
+= 4.0.3 =
+* Released on 8/8/2012
+* Fixed bug with IE not displaying embeds correctly (Thanks johnb172 for bringing to our attention)
+* Fixed bug introduced in 4.0.2 where feed language was not getting set in some cases.
+* Audio embed width now uses audio player width instead of video width.
+* Added meta robots noindex HTML to play in new window and embed pages.
+* Change from using the `WP_PLUGIN_URL` define to `plugins_url()` function to better support sites in mixed SSL/non-SSL mode (please contact us if this is still a problem with combined HTTP/HTTPS sites).
+* The iTunes image is now also used as the RSS image if no RSS image is specified.
+* Warning message added to podcast channel feeds that are password protected. Warning: This feed is password protected, it cannot be accessed by public services such as feedvalidator.org or the iTunes podcast directory. (we're getting a lot of support questions about this recently. If your feed is is password protected, then services and directories can't access it by design.)
+* Translation powerpress-xx_XX.pot file updated for translators to update their language files with.
+
+
+= 4.0.2 =
+* Released on 6/29/2012
+* Fixed bug with feed language getting populated with podcast feed title.
+* Changed feed logic from using `get_option('rss_language')` to `bloginfo_rss('language')`.
+* Feed language logic for older versions of WordPress (versions < 3.4) remains for backwards compatibility.
+* PowerPress the_content filter now checks for a valid post before trying to do anything. This logic is in place to deal with poorly written plugins triggering the_content filter even when no post is loaded.
+* Updated logic for Custom Podcast Channels to work with WordPress 3.4+ Custom Post Types.
+* Auto enable the "fix theme for player" option when Facebook plugin version 1.0 is found.
+* Fixed a number of new PHP notice messages when in `WP_DEBUG` mode. (Thanks Jeremy Clarke for bringing to our attention)
+* Fix strpos getid3\module.tag.id3v2.php on line 876 PHP warning. (Thanks Zachary_DuBois for bringing to our attention)
+* Added better reporting when paid services expire.
+* Added index.php files to thwart directory listing powerpress folders with PHP scripts.
+
+
+= 4.0.1 =
+* Released on 6/15/2012
+* Fixed bug with "Feed Episode Maximizer" option only working if the "Feature Episode in iTunes" option was also turned on.
+* Added Hebrew to list of feed languages.
+* Changed logic that prevented uploading iTunes images smaller than 1400x1400. You can now upload an iTunes image that is 600x600 or larger and will receive a warning rather than an error.
+* Fixed no longer needed javascript for flare player when in edit players PowerPress admin area, Flare player was abandoned in favor of VideoJS.
+* Fixed bug with media embed HTML page having a fatal error if referencing an episode not originally saved by PowerPress.
+* Fixed bug with metamarks Javascript (jQuery) possibly causing javascript errors in some situations. Thanks Klyde and the folks from Gravity forms for bringing to our attention!
+* Increased verification (Verify button) cache from 600k to 1024k (1MB) for detecting ID3 information using 1400x1400 images.  We recommend using images in jpg format as png requires way more space in most all cases.
+* Added link to plugin [PowerPress Posts From MySQL](http://wordpress.org/extend/plugins/powerpress-posts-from-mysql/developers/) - Creates blog posts with PowerPress podcast episode information from a MySQL table.
+* Added link to plugin [Eli's PowerPress Addon Widget](http://wordpress.org/extend/plugins/podpress-addons/) - Adds a sidebar widget that lists your podcast episodes linked to the play in a new window PowerPress player.
+* Updated support links.
 
 
 = 4.0 =
@@ -755,10 +845,12 @@ Nicolas Bouliane, [Perosnal Blog](http://nicolasbouliane.com/) - contributed cod
 * Simplified Chinese for v1.0.12+ by [webmote](http://codeex.cn) - From webmote: Welcome to use the plugin. Very good! and then hope you to access my site.
 * Italian translation for v2.0.4+ by [Umberto Sartori](http://veneziadoc.net/)
 * Romanian translation for v2.0.4+ by Alexander Ovsov (Web Geek Sciense: http://webhostinggeeks.com/science/)
+* Russian translation for v4.0.5+ by  [Igor Mercury](http://www.nightdiary.ru/)
 
 
 == Tips and Tutorials ==
 * [Using PowerPress outside the Loop](http://blog.nicolasbouliane.com/?p=1695) - by [Nicolas Bouliane](http://blog.nicolasbouliane.com/)
+* [The PowerPress Podcast](http://www.powerpresspodcast.com/) - by [Blubrry](http://www.blubrry.com/)
 
 Please [contact blubrry](http://www.blubrry.com/contact.php) with the link to your tips or tutorial for PowerPress and we'll add them to the list above.
 
