@@ -3,7 +3,7 @@
 Plugin Name: Blubrry PowerPress
 Plugin URI: http://www.blubrry.com/powerpress/
 Description: <a href="http://www.blubrry.com/powerpress/" target="_blank">Blubrry PowerPress</a> adds podcasting support to your blog. Features include: media player, 3rd party statistics, iTunes integration, Blubrry Services (Media Statistics and Hosting) integration and a lot more.
-Version: 4.0.5
+Version: 4.0.7
 Author: Blubrry
 Author URI: http://www.blubrry.com/
 Change Log:
@@ -33,7 +33,7 @@ if( !function_exists('add_action') )
 	die("access denied.");
 	
 // WP_PLUGIN_DIR (REMEMBER TO USE THIS DEFINE IF NEEDED)
-define('POWERPRESS_VERSION', '4.0.5' );
+define('POWERPRESS_VERSION', '4.0.7' );
 
 // Translation support:
 if ( !defined('POWERPRESS_ABSPATH') )
@@ -63,7 +63,9 @@ if( !defined('POWERPRESS_PLAY_TEXT') )
 	define('POWERPRESS_PLAY_TEXT', __('Play', 'powerpress') );
 if( !defined('POWERPRESS_EMBED_TEXT') )	
 	define('POWERPRESS_EMBED_TEXT', __('Embed', 'powerpress') );
-
+if( !defined('POWERPRESS_READ_TEXT') )	
+	define('POWERPRESS_READ_TEXT', __('Read', 'powerpress') );
+	
 if( !defined('POWERPRESS_BLUBRRY_API_URL') )
 	define('POWERPRESS_BLUBRRY_API_URL', 'http://api.blubrry.com/');
 	
@@ -95,7 +97,7 @@ if( !defined('PHP_EOL') )
 
 // Set regular expression values for determining mobile devices
 if( !defined('POWERPRESS_MOBILE_REGEX') )
-	define('POWERPRESS_MOBILE_REGEX', 'iphone|ipod|ipad|aspen|android|blackberry|opera mini|webos|incognito|webmate');
+	define('POWERPRESS_MOBILE_REGEX', 'iphone|ipod|ipad|aspen|android|blackberry|opera mini|webos|incognito|webmate|silk');
 	
 $powerpress_feed = NULL; // DO NOT CHANGE
 
@@ -299,14 +301,16 @@ function powerpress_header()
 	$Powerpress = get_option('powerpress_general');
 	if( !isset($Powerpress['custom_feeds']) )
     $Powerpress['custom_feeds'] = array('podcast'=>'Default Podcast Feed');
-		
-	if( !isset($Powerpress['player_function']) || $Powerpress['player_function'] > 0 ) // Don't include the player in the header if it is not needed...
+	
+	if( empty($Powerpress['disable_appearance']) || $Powerpress['disable_appearance'] == false )
 	{
-		$PowerpressPluginURL = powerpress_get_root_url();
-		if( !defined('POWERPRESS_ENQUEUE_SCRIPTS') )
+		if( !isset($Powerpress['player_function']) || $Powerpress['player_function'] > 0 ) // Don't include the player in the header if it is not needed...
 		{
-			echo "<script type=\"text/javascript\" src=\"". powerpress_get_root_url() ."player.js\"></script>\n";
-		}
+			$PowerpressPluginURL = powerpress_get_root_url();
+			if( !defined('POWERPRESS_ENQUEUE_SCRIPTS') )
+			{
+				echo "<script type=\"text/javascript\" src=\"". powerpress_get_root_url() ."player.js\"></script>\n";
+			}
 ?>
 <script type="text/javascript"><!--
 <?php
@@ -323,6 +327,7 @@ powerpress_url = '<?php echo powerpress_get_root_url(); ?>';
 //-->
 </script>
 <?php
+		}
 	}
 	
 	if( !empty($Powerpress['feed_links']) )
@@ -1119,7 +1124,17 @@ function powerpress_init()
 		}
 	}
 
-	
+	// CHECK if the Google Analytics for WordPress plugin is enabled, if so, lets add our players after it modifies the post content...
+	if( defined('GAWP_VERSION') && POWERPRESS_CONTENT_ACTION_PRIORITY < 120 )
+	{
+		remove_filter('get_the_excerpt', 'powerpress_content', (POWERPRESS_CONTENT_ACTION_PRIORITY - 1) );
+		remove_filter('the_content', 'powerpress_content', POWERPRESS_CONTENT_ACTION_PRIORITY);
+		remove_filter('the_excerpt', 'powerpress_content', POWERPRESS_CONTENT_ACTION_PRIORITY);
+		
+		add_filter('get_the_excerpt', 'powerpress_content', (120-1) );
+		add_filter('the_content', 'powerpress_content', 120);
+		add_filter('the_excerpt', 'powerpress_content', 120);
+	}
 }
 
 add_action('init', 'powerpress_init', -100); // We need to add the feeds before other plugins start screwing with them

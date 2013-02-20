@@ -185,6 +185,31 @@ function powerpress_dashboard_notice_1_content()
 	powerpress_dashboard_notice_message(1, $message );
 }
 
+function powerpress_dashboard_notice_2_content()
+{
+	$DismissedNotices = get_option('powerpress_dismissed_notices');
+	
+	if( !empty($DismissedNotices[2]) )
+		return; // Lets not do anything to the dashboard for PowerPress Notice
+	
+	$message = '<p>'. __('Due to concerns of possible security exploits, the 1 Pixel Out Audio Player has been removed from PowerPress.', 'powerpress') .'<br />';
+	$message .= '<a href="http://blog.blubrry.com/?p=1163" target="_blank">'. __("Learn More", "powerpress") .'</a></p>';
+	
+	powerpress_dashboard_notice_message(2, $message );
+}
+
+function powerpress_dashboard_notice_3_content()
+{
+	$DismissedNotices = get_option('powerpress_dismissed_notices');
+	
+	if( !empty($DismissedNotices[3]) )
+		return; // Lets not do anything to the dashboard for PowerPress Notice
+	
+	$message = '<p>'. __('The 1 Pixel Out player is back! The security concerns have been addressed in this latest version.', 'powerpress') .'<br />';
+	$message .= '<a href="http://blog.blubrry.com/2013/02/14/1-pixel-out-player-returns-to-powerpress/" target="_blank">'. __("Learn More", "powerpress") .'</a></p>';
+	
+	powerpress_dashboard_notice_message(3, $message );
+}
 
 function powerpress_dashboard_notice_message($notice_id, $message)
 {
@@ -221,23 +246,24 @@ function powerpress_dashboard_setup()
 	if( !empty($Settings['use_caps']) && !current_user_can('view_podcast_stats') )
 		$StatsDashboard = false;
 		
-	// PowerPress Dashboard Notice 1:
-	$Notice1Dashboard = false;
-	if( !empty($Settings['timestamp']) && $Settings['timestamp'] < mktime(0, 0, 0, 5, 15, 2012) )
+	// PowerPress Dashboard Notice 3:
+	$Notice3Dashboard = false;
+	if( time() < mktime(0, 0, 0, 2, 21, 2013) ) // One week later after update, lets no longer but folks about the news
 	{
-		$Notice1Dashboard = true;
-		// Now check if they dismissed the notice...
+		$Notice3Dashboard = true;
 		$DismissedNotices = get_option('powerpress_dismissed_notices');
-		if( !empty($DismissedNotices[1]) )
-			$Notice1Dashboard = false;
+		if( !empty($DismissedNotices[3]) )
+		{
+			$Notice3Dashboard = false; // Month notice is over
+		}
 	}
 	//$Notice1Dashboard = false;// Temporary till release
 
-	if( $Notice1Dashboard )
+	if( $Notice3Dashboard )
 	{
 		$user = wp_get_current_user();
-		powerpressadmin_add_dashboard_notice_widget($user->ID, 1);
-		wp_add_dashboard_widget( 'powerpress_dashboard_notice_1', __( 'Blubrry PowerPress Notice - May 2012', 'powerpress'), 'powerpress_dashboard_notice_1_content' );
+		powerpressadmin_add_dashboard_notice_widget($user->ID, 3);
+		wp_add_dashboard_widget( 'powerpress_dashboard_notice_3', __( 'Blubrry PowerPress Notice - February 2013', 'powerpress'), 'powerpress_dashboard_notice_3_content' );
 	}
 	
 	if( $NewsDashboard )
