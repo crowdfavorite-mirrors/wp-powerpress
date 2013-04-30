@@ -126,12 +126,13 @@ function powerpress_dashboard_stats_content()
 	{
 		if( !$UserPass )
 		{
-			$content = sprintf('<p>'. __('Wait a sec! This feature is only available to Blubrry Podcast Community members. Join our community to get free podcast statistics and access to other valuable %s.', 'powerpress') .'</p>',
-					'<a href="http://www.blubrry.com/powerpress_services/" target="_blank">'. __('Services', 'powerpress') . '</a>' );
+			$content = sprintf('<p>'. __('Wait a sec! This feature is only available to Blubrry Podcast Community members. Join our community to get %s and access to other valuable %s.', 'powerpress') .'</p>',
+					'<a href="http://create.blubrry.com/resources/podcast-media-download-statistics/basic-statistics/" target="_blank">'. __('Free Podcast Statistics') . '</a>',
+					'<a href="http://create.blubrry.com/resources/" target="_blank">'. __('Services', 'powerpress') . '</a>' );
 			$content .= ' ';
 			$content .= sprintf('<p>'. __('Our %s integrated PowerPress makes podcast publishing simple. Check out the %s on our exciting three-step publishing system!', 'powerpress') .'</p>',
-					'<a href="http://www.blubrry.com/powerpress_services/" target="_blank">'. __('Podcast Hosting', 'powerpress') .'</a>',
-					'<a href="http://www.blubrry.com/powerpress_services/" target="_blank">'. __('Video', 'powerpress') .'</a>' );
+					'<a href="http://create.blubrry.com/resources/podcast-media-hosting/" target="_blank">'. __('Podcast Hosting', 'powerpress') .'</a>',
+					'<a href="http://create.blubrry.com/resources/powerpress/using-powerpress/blubrry-hosting-with-powerpress/" target="_blank">'. __('Video', 'powerpress') .'</a>' );
 		}
 		else
 		{
@@ -154,7 +155,7 @@ function powerpress_dashboard_stats_content()
 	{
 ?>
 	<div id="blubrry_stats_media_show">
-		<a href="<?php echo admin_url(); ?>?action=powerpress-jquery-stats&amp;KeepThis=true&amp;TB_iframe=true&amp;modal=true" title="<?php echo __('Blubrry Media statistics', 'powerpress'); ?>" class="thickbox"><?php echo __('more', 'powerpress'); ?></a>
+		<a href="<?php echo admin_url('admin.php'); ?>?action=powerpress-jquery-stats&amp;KeepThis=true&amp;TB_iframe=true&amp;modal=true" title="<?php echo __('Blubrry Media statistics', 'powerpress'); ?>" class="thickbox"><?php echo __('more', 'powerpress'); ?></a>
 	</div>
 <?php } ?>
 </div>
@@ -198,6 +199,19 @@ function powerpress_dashboard_notice_2_content()
 	powerpress_dashboard_notice_message(2, $message );
 }
 
+function powerpress_dashboard_notice_3_content()
+{
+	$DismissedNotices = get_option('powerpress_dismissed_notices');
+	
+	if( !empty($DismissedNotices[3]) )
+		return; // Lets not do anything to the dashboard for PowerPress Notice
+	
+	$message = '<p>'. __('The 1 Pixel Out player is back! The security concerns have been addressed in this latest version.', 'powerpress') .'<br />';
+	$message .= '<a href="http://blog.blubrry.com/2013/02/14/1-pixel-out-player-returns-to-powerpress/" target="_blank">'. __("Learn More", "powerpress") .'</a></p>';
+	
+	powerpress_dashboard_notice_message(3, $message );
+}
+
 function powerpress_dashboard_notice_message($notice_id, $message)
 {
 	echo $message;
@@ -233,37 +247,24 @@ function powerpress_dashboard_setup()
 	if( !empty($Settings['use_caps']) && !current_user_can('view_podcast_stats') )
 		$StatsDashboard = false;
 		
-	// PowerPress Dashboard Notice 1:
-	$Notice1Dashboard = false;
-	if( !empty($Settings['timestamp']) && $Settings['timestamp'] < mktime(0, 0, 0, 5, 15, 2012) )
+	// PowerPress Dashboard Notice 3:
+	$Notice3Dashboard = false;
+	if( time() < mktime(0, 0, 0, 2, 21, 2013) ) // One week later after update, lets no longer but folks about the news
 	{
-		$Notice1Dashboard = true;
-		// Now check if they dismissed the notice...
+		$Notice3Dashboard = true;
 		$DismissedNotices = get_option('powerpress_dismissed_notices');
-		if( !empty($DismissedNotices[1]) )
-			$Notice1Dashboard = false;
-	}
-	
-	$Notice2Dashboard = true;
-	$DismissedNotices = get_option('powerpress_dismissed_notices');
-	if( !empty($DismissedNotices[2]) )
-	{
-		$Notice2Dashboard = false;
+		if( !empty($DismissedNotices[3]) )
+		{
+			$Notice3Dashboard = false; // Month notice is over
+		}
 	}
 	//$Notice1Dashboard = false;// Temporary till release
 
-	if( $Notice1Dashboard )
+	if( $Notice3Dashboard )
 	{
 		$user = wp_get_current_user();
-		powerpressadmin_add_dashboard_notice_widget($user->ID, 1);
-		wp_add_dashboard_widget( 'powerpress_dashboard_notice_1', __( 'Blubrry PowerPress Notice - May 2012', 'powerpress'), 'powerpress_dashboard_notice_1_content' );
-	}
-	
-	if( $Notice2Dashboard )
-	{
-		$user = wp_get_current_user();
-		powerpressadmin_add_dashboard_notice_widget($user->ID, 2);
-		wp_add_dashboard_widget( 'powerpress_dashboard_notice_2', __( 'Blubrry PowerPress Notice - January 2013', 'powerpress'), 'powerpress_dashboard_notice_2_content' );
+		powerpressadmin_add_dashboard_notice_widget($user->ID, 3);
+		wp_add_dashboard_widget( 'powerpress_dashboard_notice_3', __( 'Blubrry PowerPress Notice - February 2013', 'powerpress'), 'powerpress_dashboard_notice_3_content' );
 	}
 	
 	if( $NewsDashboard )

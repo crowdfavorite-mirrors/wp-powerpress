@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Blubrry PowerPress
-Plugin URI: http://www.blubrry.com/powerpress/
-Description: <a href="http://www.blubrry.com/powerpress/" target="_blank">Blubrry PowerPress</a> adds podcasting support to your blog. Features include: media player, 3rd party statistics, iTunes integration, Blubrry Services (Media Statistics and Hosting) integration and a lot more.
-Version: 4.0.6
+Plugin URI: http://create.blubrry.com/resources/powerpress/
+Description: <a href="http://create.blubrry.com/resources/powerpress/" target="_blank">Blubrry PowerPress</a> adds podcasting support to your blog. Features include: media player, 3rd party statistics, iTunes integration, Blubrry Services (Media Statistics and Hosting) integration and a lot more.
+Version: 4.0.8
 Author: Blubrry
 Author URI: http://www.blubrry.com/
 Change Log:
@@ -21,7 +21,7 @@ Credits:
 	flashembed(), License: MIT by Tero Piirainen (tipiirai [at] gmail.com)
 		Note: code found at bottom of player.js
 	
-Copyright 2008-2011 RawVoice Inc. (http://www.rawvoice.com)
+Copyright 2008-2013 RawVoice Inc. (http://www.rawvoice.com)
 
 License: GPL (http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt)
 
@@ -33,7 +33,7 @@ if( !function_exists('add_action') )
 	die("access denied.");
 	
 // WP_PLUGIN_DIR (REMEMBER TO USE THIS DEFINE IF NEEDED)
-define('POWERPRESS_VERSION', '4.0.6' );
+define('POWERPRESS_VERSION', '4.0.8' );
 
 // Translation support:
 if ( !defined('POWERPRESS_ABSPATH') )
@@ -63,7 +63,9 @@ if( !defined('POWERPRESS_PLAY_TEXT') )
 	define('POWERPRESS_PLAY_TEXT', __('Play', 'powerpress') );
 if( !defined('POWERPRESS_EMBED_TEXT') )	
 	define('POWERPRESS_EMBED_TEXT', __('Embed', 'powerpress') );
-
+if( !defined('POWERPRESS_READ_TEXT') )	
+	define('POWERPRESS_READ_TEXT', __('Read', 'powerpress') );
+	
 if( !defined('POWERPRESS_BLUBRRY_API_URL') )
 	define('POWERPRESS_BLUBRRY_API_URL', 'http://api.blubrry.com/');
 	
@@ -95,7 +97,7 @@ if( !defined('PHP_EOL') )
 
 // Set regular expression values for determining mobile devices
 if( !defined('POWERPRESS_MOBILE_REGEX') )
-	define('POWERPRESS_MOBILE_REGEX', 'iphone|ipod|ipad|aspen|android|blackberry|opera mini|webos|incognito|webmate');
+	define('POWERPRESS_MOBILE_REGEX', 'iphone|ipod|ipad|aspen|android|blackberry|opera mini|webos|incognito|webmate|silk');
 	
 $powerpress_feed = NULL; // DO NOT CHANGE
 
@@ -293,36 +295,63 @@ add_filter('get_the_excerpt', 'powerpress_content', (POWERPRESS_CONTENT_ACTION_P
 add_filter('the_content', 'powerpress_content', POWERPRESS_CONTENT_ACTION_PRIORITY);
 add_filter('the_excerpt', 'powerpress_content', POWERPRESS_CONTENT_ACTION_PRIORITY);
 
+
+/* Specail case fix Yoast bug which messes up the HTML */
+function powerpress_yoast_gawp_fix($content)
+{
+	$content= preg_replace(
+		array('/return powerpress\_pinw\(\"/', '/return powerpress\_embed\_quicktime\(\"/', '/return powerpress\_embed\_winplayer\(\"/', '/return powerpress\_embed\_swf\(\"/', '/return powerpress\_show\_embed\(\"/', '/return powerpress\_embed\_html5v\(\"/', '/return powerpress\_embed\_html5a\(\"/',  ),
+		array('return powerpress_pinw(\'', 'return powerpress_embed_quicktime(\'', 'return powerpress_embed_winplayer(\'', 'return powerpress_embed_swf(\'', 'return powerpress_show_embed(\'', 'return powerpress_embed_html5v(\'', 'return powerpress_embed_html5a(\'' ),
+		$content);
+	
+	return $content;
+}
+
 function powerpress_header()
 {
 	// PowerPress settings:
 	$Powerpress = get_option('powerpress_general');
 	if( !isset($Powerpress['custom_feeds']) )
     $Powerpress['custom_feeds'] = array('podcast'=>'Default Podcast Feed');
-		
-	if( !isset($Powerpress['player_function']) || $Powerpress['player_function'] > 0 ) // Don't include the player in the header if it is not needed...
+	
+	if( empty($Powerpress['disable_appearance']) || $Powerpress['disable_appearance'] == false )
 	{
-		$PowerpressPluginURL = powerpress_get_root_url();
-		if( !defined('POWERPRESS_ENQUEUE_SCRIPTS') )
+		if( !isset($Powerpress['player_function']) || $Powerpress['player_function'] > 0 ) // Don't include the player in the header if it is not needed...
 		{
-			echo "<script type=\"text/javascript\" src=\"". powerpress_get_root_url() ."player.js\"></script>\n";
-		}
+			$PowerpressPluginURL = powerpress_get_root_url();
+			if( !defined('POWERPRESS_ENQUEUE_SCRIPTS') )
+			{
+				echo "<script type=\"text/javascript\" src=\"". powerpress_get_root_url() ."player.js\"></script>\n";
+			}
 ?>
 <script type="text/javascript"><!--
 <?php
 		$new_window_width = 420;
 		$new_window_height = 240;
 
-		if( isset($Powerpress['new_window_width']) && $Powerpress['new_window_width'] > 100 )
+		if( isset($Powerpress['new_window_width']) && $Powerpress['new_window_width'] > 0 )
 			$new_window_width = $Powerpress['new_window_width'];
-		if( isset($Powerpress['new_window_height']) && $Powerpress['new_window_height'] > 40 )
+		else if( isset($Powerpress['new_window_width']) )
+			$new_window_width = 50;
+			
+		if( isset($Powerpress['new_window_height']) && $Powerpress['new_window_height'] > 0 )
 			$new_window_height = $Powerpress['new_window_height'];
+		else if( isset($Powerpress['new_window_height']) )
+			$new_window_height = 20;
+			
+		if( empty($Powerpress['new_window_nofactor']) )
+		{
+			$new_window_width  += 40;
+			$new_window_height += 80;
+		}
+		
 ?>
-function powerpress_pinw(pinw){window.open('<?php echo get_bloginfo('url'); ?>/?powerpress_pinw='+pinw, 'PowerPressPlayer','toolbar=0,status=0,resizable=1,width=<?php echo ($new_window_width + 40); ?>,height=<?php echo ($new_window_height + 80); ?>');	return false;}
+function powerpress_pinw(pinw){window.open('<?php echo get_bloginfo('url'); ?>/?powerpress_pinw='+pinw, 'PowerPressPlayer','toolbar=0,status=0,resizable=1,width=<?php echo ($new_window_width); ?>,height=<?php echo ($new_window_height); ?>');	return false;}
 powerpress_url = '<?php echo powerpress_get_root_url(); ?>';
 //-->
 </script>
 <?php
+		}
 	}
 	
 	if( !empty($Powerpress['feed_links']) )
@@ -1120,6 +1149,10 @@ function powerpress_init()
 	}
 
 	
+	if( defined('GAWP_VERSION') )
+	{
+		add_filter('the_content', 'powerpress_yoast_gawp_fix', 120 );
+	}
 }
 
 add_action('init', 'powerpress_init', -100); // We need to add the feeds before other plugins start screwing with them
@@ -1961,8 +1994,19 @@ function powerpress_add_redirect_url($MediaURL, $GeneralSettings = false)
 		if( !empty($GeneralSettings[ $key ]) )
 		{
 			$RedirectClean = str_replace('http://', '', trim($GeneralSettings[ $key ]) );
-			if( !strstr($NewURL, $RedirectClean) )
-				$NewURL = 'http://'. $RedirectClean . str_replace('http://', '', $NewURL);
+			if( !empty($RedirectClean) )
+			{
+				if( strpos($RedirectClean, '/') == 0 ) // Not a valid redirect URL
+					continue;
+				// Check that redirect is either media..blubrry.com, media.techpodcasts.com, media.rawvoice.com, or www.podtrac.com
+				$ValidRedirectDomains = array('media.blubrry.com', 'media.rawvoice.com', 'media.techpodcasts.com', 'www.podtrac.com', 'podtrac.com');
+				$RedirectDomain = strtolower(substr($RedirectClean, 0, strpos($RedirectClean, '/') ));
+				if( !in_array($RedirectDomain, $ValidRedirectDomains) )
+					continue; // Not a valid domain so lets not add it
+				
+				if( !strstr($NewURL, $RedirectClean) )
+					$NewURL = 'http://'. $RedirectClean . str_replace('http://', '', $NewURL);
+			}
 		}
 	}
 
