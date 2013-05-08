@@ -469,6 +469,8 @@ function powerpress_admin_init()
 					$General['podcast_embed_in_feed'] = 0;
 				if( !isset($General['m4a'] ) )
 					$General['m4a'] = '';
+				if( !isset($General['new_window_nofactor'] ) )
+					$General['new_window_nofactor'] = '';
 			}
 			
 			if( !empty($_POST['action']) && $_POST['action'] == 'powerpress-save-tags' )
@@ -900,7 +902,7 @@ function powerpress_admin_init()
 				$ps_role = get_role('premium_subscriber');
 				if(!$ps_role)
 				{
-					add_role('premium_subscriber', __('Premium Subscriber', 'powerpress'), $caps);
+					add_role('premium_subscriber', __('Premium Subscriber', 'powerpress'));
 					$ps_role = get_role('premium_subscriber');
 					$ps_role->add_cap('read');
 					$ps_role->add_cap('premium_content');
@@ -1161,12 +1163,39 @@ function powerpress_admin_menu()
 					add_meta_box('powerpress-'.$feed_slug, __('Podcast Episode for Custom Channel', 'powerpress') .': '.$feed_title, 'powerpress_meta_box', $post_type, 'normal');
 				}
 			}
+			reset($Powerpress['custom_feeds']);
 		}
 		else
 		{
 			reset($post_types);
 			while( list($null,$post_type) = each($post_types) )
 				add_meta_box('powerpress-podcast', __('Podcast Episode', 'powerpress'), 'powerpress_meta_box', $post_type, 'normal');
+		}
+		
+		// For custom compatibility type set:
+		if( isset($Powerpress['custom_feeds']) && defined('POWERPRESS_CUSTOM_CAPABILITY_TYPE') )
+		{
+			$post_types = powerpress_admin_get_post_types_by_capability_type( POWERPRESS_CUSTOM_CAPABILITY_TYPE );
+			if( !empty($post_types) )
+			{
+				while( list($feed_slug, $feed_title) = each($Powerpress['custom_feeds']) )
+				{
+					if( $feed_slug == 'podcast' )
+						continue;
+					
+					$FeedCustom = get_option('powerpress_feed_'.$feed_slug);
+							
+					reset($post_types);
+					while( list($null,$post_type) = each($post_types) )
+					{
+						if( !empty($FeedCustom['custom_post_type']) && $FeedCustom['custom_post_type'] != $post_type )
+							continue;
+						
+						add_meta_box('powerpress-'.$feed_slug, __('Podcast Episode for Custom Channel', 'powerpress') .': '.$feed_title, 'powerpress_meta_box', $post_type, 'normal');
+					}
+				}
+				reset($Powerpress['custom_feeds']);
+			}
 		}
 	}
 	
@@ -1576,10 +1605,10 @@ jQuery(document).ready(function($) {
 	
 	if( jQuery("#powerpress_settings_page").length > 0 )
 	{
-		var tabs = jQuery("#powerpress_settings_page").tabs();
-		tabs.tabs('select', <?php echo (empty($_POST['tab'])?0:$_POST['tab']); ?>);
+		var tabsCtl = jQuery("#powerpress_settings_page").tabs();
+		tabsCtl.tabs("option", "active", <?php echo (empty($_POST['tab'])?0:$_POST['tab']); ?>);
 		jQuery('form').submit(function() {
-			var selectedTemp = tabs.tabs('option', 'selected');
+			var selectedTemp = tabsCtl.tabs('option', 'active');
 			jQuery('#save_tab_pos').val(selectedTemp);
 		});
 	}
@@ -2181,9 +2210,10 @@ function powerpress_admin_page_footer($SaveButton=true, $form=true)
 </p>
 <?php } ?>
 <p style="font-size: 85%; text-align: center; padding-bottom: 35px;">
-	<a href="http://www.blubrry.com/powerpress/" title="Blubrry PowerPress" target="_blank"><?php echo __('Blubrry PowerPress', 'powerpress'); ?></a> <?php echo POWERPRESS_VERSION; ?> &#8212; 
-	<a href="http://www.podcastfaq.com/" target="_blank" title="<?php echo __('PodcastFAQ.com', 'powerpress'); ?>"><?php echo __('PodcastFAQ.com', 'powerpress'); ?></a> |
-	<a href="http://help.blubrry.com/blubrry-powerpress/" target="_blank" title="<?php echo __('Blubrry PowerPress Documentation', 'powerpress'); ?>"><?php echo __('Documentation', 'powerpress'); ?></a> |
+	<a href="http://create.blubrry.com/resources/powerpress/" title="Blubrry PowerPress" target="_blank"><?php echo __('Blubrry PowerPress', 'powerpress'); ?></a> <?php echo POWERPRESS_VERSION; ?> &#8212; 
+	<a href="http://create.blubrry.com/manual/" target="_blank" title="<?php echo __('Podcasting Manual', 'powerpress'); ?>"><?php echo __('Podcasting Manual', 'powerpress'); ?></a> |
+	<a href="http://create.blubrry.com/resources/" target="_blank" title="<?php echo __('Blubrry PowerPress and related Resources', 'powerpress'); ?>"><?php echo __('Resources', 'powerpress'); ?></a> |
+	<a href="http://create.blubrry.com/support/" target="_blank" title="<?php echo __('Blubrry Support', 'powerpress'); ?>"><?php echo __('Support', 'powerpress'); ?></a> |
 	<a href="http://forum.blubrry.com/" target="_blank" title="<?php echo __('Blubrry Forum', 'powerpress'); ?>"><?php echo __('Forum', 'powerpress'); ?></a> |
 	<a href="http://twitter.com/blubrry" target="_blank" title="<?php echo __('Follow Blubrry on Twitter', 'powerpress'); ?>"><?php echo __('Follow Blubrry on Twitter', 'powerpress'); ?></a>
 </p>
@@ -2481,7 +2511,7 @@ function powerpress_process_hosting($post_ID, $post_title)
 	$errors = array();
 	$Settings = get_option('powerpress_general');
 	$CustomFeeds = array();
-	if( is_array($Settings['custom_feeds']) )
+	if( !empty($Settings['custom_feeds']) && is_array($Settings['custom_feeds']) )
 		$CustomFeeds = $Settings['custom_feeds'];
 	if( !isset($CustomFeeds['podcast']) )
 		$CustomFeeds['podcast'] = 'podcast';
@@ -3122,7 +3152,7 @@ function powerpress_get_media_info_local($media_file, $content_type='', $file_si
 		{
 			// Add a warning that the redirect count exceeded 5, which may prevent some podcatchers from downloading the media.
 			$warning = sprintf( __('Warning, the Media URL %s contains %d redirects.', 'powerpress'), $media_file, $Mp3Info->GetRedirectCount() );
-			$warning .=	' [<a href="http://help.blubrry.com/blubrry-powerpress/errors-and-warnings/" title="'. __('Help', 'powerpress') .'" target="_blank">'. __('Help') .'</a>]';
+			$warning .=	' [<a href="http://create.blubrry.com/resources/powerpress/using-powerpress/warning-messages-explained/" title="'. __('PowerPress Warnings Explained', 'powerpress') .'" target="_blank">'. __('PowerPress Warnings Explained') .'</a>]';
 			if( $return_warnings )
 				$warning_msg .= $warning;
 			else
@@ -3144,7 +3174,7 @@ function powerpress_get_media_info_local($media_file, $content_type='', $file_si
 			$Warnings = $Mp3Info->GetWarnings();
 			while( list($null, $warning) = each($Warnings) )
 			{
-				$warning = sprintf( __('Warning, Media URL %s', 'powerpress'), $media_file) .': '. $warning  .' [<a href="http://help.blubrry.com/blubrry-powerpress/errors-and-warnings/" title="'. __('Help') .'" target="_blank">'. __('Help', 'powerpress') .'</a>]';
+				$warning = sprintf( __('Warning, Media URL %s', 'powerpress'), $media_file) .': '. $warning  .' [<a href="http://create.blubrry.com/resources/powerpress/using-powerpress/warning-messages-explained/" target="_blank">'. __('PowerPress Warnings Explained', 'powerpress') .'</a>]';
 				if( $return_warnings )
 					$warning_msg .= $warning;
 				else
@@ -3182,7 +3212,7 @@ function powerpress_get_media_info_local($media_file, $content_type='', $file_si
 			{
 				// Add a warning that the redirect count exceeded 5, which may prevent some podcatchers from downloading the media.
 				powerpress_add_error( sprintf( __('Warning, the Media URL %s contains %d redirects.', 'powerpress'), $media_file, $Mp3Info->GetRedirectCount() )
-					.' [<a href="http://help.blubrry.com/blubrry-powerpress/errors-and-warnings/" title="'. __('Help') .'" target="_blank">'. __('Help', 'powerpress') .'</a>]'
+					.' [<a href="http://create.blubrry.com/resources/powerpress/using-powerpress/warning-messages-explained/" target="_blank">'. __('PowerPress Warnings Explained', 'powerpress') .'</a>]'
 					);
 			}
 			
@@ -3196,7 +3226,7 @@ function powerpress_get_media_info_local($media_file, $content_type='', $file_si
 			{
 				$Warnings = $Mp3Info->GetWarnings();
 				while( list($null, $warning) = each($Warnings) )
-					powerpress_add_error(  sprintf( __('Warning, Media URL %s', 'powerpress'), $media_file) .': '. $warning  .' [<a href="http://help.blubrry.com/blubrry-powerpress/errors-and-warnings/" title="'. __('Help') .'" target="_blank">'. __('Help', 'powerpress') .'</a>]' );
+					powerpress_add_error(  sprintf( __('Warning, Media URL %s', 'powerpress'), $media_file) .': '. $warning  .' [<a href="http://create.blubrry.com/resources/powerpress/using-powerpress/warning-messages-explained/" target="_blank">'. __('PowerPress Warnings Explained', 'powerpress') .'</a>]' );
 			}
 		}
 		else

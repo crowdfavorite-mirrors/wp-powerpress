@@ -501,7 +501,7 @@ if( $feed_slug || $cat_ID )
 
 <p style="margin-top: 0px; margin-bottomd: 0;"><?php echo powerpressadmin_notice( __('NOTE: FeedBurner is not required for podcasting.', 'powerpress') ); ?> <br /> 
 <?php echo powerpressadmin_notice( __('No support is available from blubrry if you are using Feedburner or other feed hosted services.', 'powerpress') ); ?><br /> 
-<a href="http://www.podcastfaq.com/syndicating-your-podcast/feedburner-for-podcasting/" target="_blank"><?php echo __('Learn more about FeedBurner and Podcasitng', 'powerpress'); ?></a>
+<a href="http://create.blubrry.com/manual/syndicating-your-podcast-rss-feeds/feedburner-for-podcasting/" target="_blank"><?php echo __('Learn more about FeedBurner and Podcasitng', 'powerpress'); ?></a>
 </p>
 
 <p><?php echo __('Use this option to redirect this feed to a hosted feed service such as FeedBurner.', 'powerpress'); ?></p>
@@ -823,6 +823,7 @@ function powerpress_default_premium_label(event)
 <?php ?>
 <select name="Feed[custom_post_type]" class="bpp_input_med">
 <?php
+
 			$post_types = powerpress_admin_get_post_types_by_capability_type('post');
 			$custom_post_type = '';
 			if( !empty($FeedSettings['custom_post_type']) )
@@ -837,6 +838,23 @@ function powerpress_default_premium_label(event)
 				if( !empty($postTypeObj->labels->name ) )
 					$desc = $postTypeObj->labels->name . ' ('. $value .')';
 				echo "\t<option value=\"$value\"". ($custom_post_type==$value?' selected':''). ">".htmlspecialchars($desc)."</option>\n";
+			}
+			
+			if( defined('POWERPRESS_CUSTOM_CAPABILITY_TYPE') )
+			{
+				$post_types = powerpress_admin_get_post_types_by_capability_type( POWERPRESS_CUSTOM_CAPABILITY_TYPE );
+				if( !empty($post_types) )
+				{
+					while( list($index,$value) = each($post_types) )
+					{
+						$desc = $value;
+						// TODO: See if we can get a post type label somehow
+						$postTypeObj = get_post_type_object($value);
+						if( !empty($postTypeObj->labels->name ) )
+							$desc = $postTypeObj->labels->name . ' ('. $value .')';
+						echo "\t<option value=\"$value\"". ($custom_post_type==$value?' selected':''). ">".htmlspecialchars($desc)."</option>\n";
+					}
+				}
 			}
 ?>
 </select>
@@ -1143,7 +1161,7 @@ while( list($value,$desc) = each($explicit) )
 			 </strong> 
 			 </p>
 			 <p>
-			 <?php echo __('Learn more:', 'powerpress'); ?> <a href="http://www.podcastfaq.com/syndicating-your-podcast/changing-your-podcast-rss-feed-address-url/" target="_blank"><?php echo __('Changing Your Podcast RSS Feed Address (URL)', 'powerpress'); ?></a>
+			 <?php echo __('Learn more:', 'powerpress'); ?> <a href="http://create.blubrry.com/manual/syndicating-your-podcast-rss-feeds/changing-your-podcast-rss-feed-address-url/" target="_blank"><?php echo __('Changing Your Podcast RSS Feed Address (URL)', 'powerpress'); ?></a>
 			</p>
 		</div>
 		<div id="new_feed_url_step_2" style="display: <?php echo ( !empty($FeedSettings['itunes_new_feed_url']) || !empty($FeedSettings['itunes_new_feed_url_podcast'])  ?'block':'none'); ?>;">
