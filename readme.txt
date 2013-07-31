@@ -3,7 +3,7 @@ Contributors: Angelo Mandato, Blubrry.com
 Tags: podcasting, podcast, podcaster, itunes, enclosure, zune, iphone, youtube, viddler, blip.tv, ustream, podcasting, audio, video, rss2, feed, player, media, rss, mp3, music, embed, feedburner, statistics, stats, flv, flash, id3, episodes, blubrry, webm, mp4, m4v, wordpressmu, mu, wordpress mu, multisite, multi site, mediacaster, post, plugin, posts, simple, social, dashboard, TSG, Buzzsprout, MTR, WP-boxCast, CastMyBlog, simple podcasting, seriously simple podcasting, seriously-simple-podcasting, podlove, podcast.de
 Requires at least: 3.0
 Tested up to: 3.6
-Stable tag: 4.0.8
+Stable tag: 4.0.9
 
 Blubrry PowerPress brings the essential features for podcasting to WordPress including full iTunes support, web audio/video media players and more.
 
@@ -15,7 +15,7 @@ Blubrry PowerPress brings the essential features for podcasting to WordPress. De
 PowerPress 4.0 includes all of the latest [Apple iTunes podcasting specifications](http://www.powerpresspodcast.com/2012/05/10/itunes-podcasting-specifications-changed-may-2012-what-that-means-for-podcasting/). Don't be left behind, upgrade to PowerPress 4.0 today!
 
 = Currently Using PodPress? =
-Switching to PowerPress is seamless, just enable PowerPress then disable PodPress and you're done! Switching plugins is that easy! Visit **[Migrating from PodPress to PowerPress](http://create.blubrry.com/resources/powerpress/advanced-tools-and-options/migrating-from-podpress-to-powerpress/)** for details.
+Switching to PowerPress is seamless, just enable PowerPress then disable PodPress and you're done! Switching plugins is that easy! Visit [Migrating from PodPress to PowerPress](http://create.blubrry.com/resources/powerpress/advanced-tools-and-options/migrating-from-podpress-to-powerpress/) for details.
 
 =  PowerPress Key Features  =
 - HTML5 video support: Add both mp4 and webm media to each episode for maximum platform compatibility
@@ -159,11 +159,23 @@ To install Blubrry PowerPress manually, follow these steps:
 * PowerPress 3.0+ is not compatible with WordPress 2.8.x and 2.9.x. Please upgrade to WordPress 3.0 or newer to install PowerPress.
 * Translation support is now complete. Please visit the following link if you would like to have a version in your language: [http://create.blubrry.com/resources/powerpress/advanced-tools-and-options/translating-powerpress/](http://create.blubrry.com/resources/powerpress/advanced-tools-and-options/translating-powerpress/)
 
+= 4.0.9 =
+* Releaesd on 6/20/2013
+* PowerPress 5.0 is coming! If you would like to beta test, please contact Angelo at cio [at] rawovice dot com. Beta testing starts when WordPress 3.6 is released, PowerPress 5.0 will utilize some new features in WordPress 3.6.
+* The PowerPress Version Updates Survey results will be posted in the coming weeks.  Based on user feedback, we will release minor updates within 7 days if necessary, major releases between 1-3 months apart, and new features will be included in the plguin but disabled by default.
+* Fixed logic for displaying statistics in dashboard to time out after 1 second (was previously 15 seconds) so if there's a network issue between the server and blubrry.com the dashboard still loads promptly. (Thanks Michael Hansen for bringing to our attention!)
+* Added new filter `powerpress_feed_auth` for other plugins to filter feed authentication. (Thanks amereservant for the feature suggestion!)
+* Added new define `POWERPRESS_AUTO_DETECT_ONCE`, edits to existing episodes will use the specify option if this define is set to true. (Thanks amereservant for the feature suggestion!)
+* Fixed bug with ID3 tagging not correctly incrementing the track number for episodes. This only affected Blubrry hosting customers who had this option turned on. (Thanks RWPeck for bringing to our attention!)
+* Mobile devices now use the same HTML5 player as the regular desktop HTML5 player found in PowerPress. This is due to reports that some mobile devices are now pre-loading media on pages, this will cut down on such bandwidth. (Thanks Daniel for bringing to our attention)
+* Added new define `POWERPRESS_POST_TYPES`, when set, only the post types specified are given podcasting episode entry boxes. Multiple post types are separated by commas. Example with added movies custom post type added: `'page,post,movies'`. This will bypass the default behavior of adding episode boxes to all post types with `post` or `page` capability.
+* Fixed bug with unchecking iTunes Closed Captioned option not saving. (Thanks davidcross for reporting bug)
+
 
 = 4.0.8 =
 * Released on 4/19/2013
-* **[PowerPress Version Updates Survey](https://docs.google.com/forms/d/1_sWoSwutK7VjvqaEQNV5Ww0-c0kVUUnDKqOtjbP-DXs/viewform?pli=1)** - please participate, only 4 questions!
-* **[Blubrry Create](http://create.blubrry.com) site launched! Site includes our [Podcasting Manual](http://create.blubrry.com/manual/)**, [Blubrry Resources](http://create.blubrry.com/resources/) and [Support Options](http://create.blubrry.com/support/).
+* PowerPress Version Updates Survey - Thanks everyone for participating!
+* [Blubrry Create](http://create.blubrry.com) site launched! Site includes our [Podcasting Manual](http://create.blubrry.com/manual/), [Blubrry Resources](http://create.blubrry.com/resources/) and [Support Options](http://create.blubrry.com/support/).
 * Completely rewrote logic added in 4.0.7 to fix the conflict with Yoast Google Analytics plugin. This sholud solve the issues folks have been having when using this plugin with PowerPress.
 * Flow Player Classic audio player height changed from 24 to 22 when Firefox detected, displays correctly in Firefox with this custom height.
 * Added code to prevent possible "Empty delimiter" warning for strstr function calls in plugin.
@@ -602,7 +614,7 @@ To install Blubrry PowerPress manually, follow these steps:
 
 = 0.9.9 =
 * Released on 9/12/2009
-* No longer checking content type returned from servers, check effected video podcasters who have no control of their servers.
+* No longer checking content type returned from servers, check affected video podcasters who have no control of their servers.
 * Added Media URL redirect warning when redirects exceed 5, previously this was an error.
 * Better detection used when server does not support HTTP URL connections, we now display a message when `allow_url_fopen` setting is disabled and cURL library not available.
 * Blubrry Services Integration, added message when authentication failed and display error when web server does not support Blubrry services.
