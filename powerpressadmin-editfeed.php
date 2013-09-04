@@ -138,13 +138,13 @@ function powerpress_admin_capabilities()
 
 
 // powerpressadmin_editfeed.php
-// function powerpress_admin_editfeed($feed_slug=false, $cat_ID = false, $term_taxonomy_id = false)
-function powerpress_admin_editfeed($type='', $type_value = '')
+function powerpress_admin_editfeed($type='', $type_value = '', $feed_slug = false)
 {
 	$SupportUploads = powerpressadmin_support_uploads();
 	$General = powerpress_get_settings('powerpress_general');
-	$FeedAttribs = array('type'=>$type, 'channel'=>'', 'category_id'=>0, 'term_taxonomy_id'=>0, 'term_id'=>0, 'taxonomy_type'=>'', 'post_type'=>'');
-	$feed_slug=false; $cat_ID = false; $term_taxonomy_id = false;
+	$FeedAttribs = array('type'=>$type, 'feed_slug'=>'', 'category_id'=>0, 'term_taxonomy_id'=>0, 'term_id'=>0, 'taxonomy_type'=>'', 'post_type'=>'');
+	$cat_ID = false; $term_taxonomy_id = false;
+
 	
 	$FeedTitle = __('Feed Settings', 'powerpress');
 	
@@ -152,7 +152,7 @@ function powerpress_admin_editfeed($type='', $type_value = '')
 	{
 		case 'channel': {
 			$feed_slug = $type_value;
-			$FeedAttribs['channel'] = $type_value;
+			$FeedAttribs['feed_slug'] = $type_value;
 			$FeedSettings = powerpress_get_settings('powerpress_feed_'.$feed_slug);
 			if( !$FeedSettings )
 			{
@@ -168,6 +168,7 @@ function powerpress_admin_editfeed($type='', $type_value = '')
 				
 			$FeedTitle = sprintf( 'Podcast Settings for Channel: %s', $General['custom_feeds'][$feed_slug]);
 			echo sprintf('<input type="hidden" name="feed_slug" value="%s" />', $feed_slug);
+			echo '<input type="hidden" name="action" value="powerpress-save-channel" />';
 			
 		}; break;
 		case 'category': {
@@ -179,6 +180,7 @@ function powerpress_admin_editfeed($type='', $type_value = '')
 			$category = get_category_to_edit($cat_ID);
 			$FeedTitle = sprintf( __('Podcast Settings for Category: %s', 'powerpress'), htmlspecialchars($category->name) );
 			echo sprintf('<input type="hidden" name="cat" value="%s" />', $cat_ID);
+			echo '<input type="hidden" name="action" value="powerpress-save-category" />';
 			
 		}; break;
 		case 'ttid': {
@@ -203,23 +205,30 @@ function powerpress_admin_editfeed($type='', $type_value = '')
 				$FeedTitle = sprintf( __('Podcast Settings for Taxonomy Term: %s', 'powerpress'), 'Term ID '.htmlspecialchars($term_taxonomy_id));
 			}
 			echo sprintf('<input type="hidden" name="ttid" value="%s" />', $term_taxonomy_id);
+			echo '<input type="hidden" name="action" value="powerpress-save-ttid" />';
 			
 		}; break;
 		case 'post_type': {
 			
 			$FeedAttribs['post_type'] = $type_value;
-			$FeedSettings = powerpress_get_settings('powerpress_post_type_'.$FeedAttribs['post_type']);
-			$FeedSettings = powerpress_default_settings($FeedSettings, 'editfeed_custom');
+			$FeedAttribs['feed_slug'] = $feed_slug;
+			$FeedSettingsArray = powerpress_get_settings('powerpress_posttype_'.$FeedAttribs['post_type']);
+			if( !is_array($FeedSettingsArray[ $feed_slug ]) )
+				$FeedSettingsArray[ $feed_slug ] = array();
+			$FeedSettings = powerpress_default_settings($FeedSettingsArray[ $feed_slug ], 'editfeed_custom');
 			
 			//$category = get_category_to_edit($cat_ID);
-			$PostTypeTitle = 'TODO';
-			$FeedTitle = sprintf( __('Podcast Settings for Post Type: %s', 'powerpress'), htmlspecialchars($PostTypeTitle) );
-			echo sprintf('<input type="hidden" name="post_type" value="%s" />', $FeedAttribs['post_type']);
+			$PostTypeTitle = $FeedAttribs['post_type']; // TODO: Get readable title of post type
+			$FeedTitle = sprintf( __('Podcast Settings for Post Type %s with slug %s', 'powerpress'), htmlspecialchars($PostTypeTitle) , htmlspecialchars($feed_slug));
+			echo sprintf('<input type="hidden" name="podcast_post_type" value="%s" />', $FeedAttribs['post_type']);
+			echo sprintf('<input type="hidden" name="feed_slug" value="%s" />', $feed_slug);
+			echo '<input type="hidden" name="action" value="powerpress-save-post_type" />';
 			
 		}; break;
 		default: {
 			$FeedSettings = powerpress_get_settings('powerpress_feed');
 			$FeedSettings = powerpress_default_settings($FeedSettings, 'editfeed');
+			echo '<input type="hidden" name="action" value="powerpress-save-settings" />';
 		}; break;
 	}
 		
@@ -236,12 +245,11 @@ function powerpress_admin_editfeed($type='', $type_value = '')
   <ul class="powerpress_settings_tabs">
 		<li><a href="#feed_tab_feed"><span><?php echo htmlspecialchars(__('Feed Settings', 'powerpress')); ?></span></a></li>
 		<li><a href="#feed_tab_itunes"><span><?php echo htmlspecialchars(__('iTunes Settings', 'powerpress')); ?></span></a></li>
-		<li><a href="#feed_tab_tv"><span><?php echo htmlspecialchars(__('T.V.', 'powerpress')); ?></span></a></li>
-	<?php if( $feed_slug ) { ?>
+		<li><a href="#feed_tab_artwork"><span><?php echo htmlspecialchars(__('Artwork', 'powerpress')); ?></span></a></li>
+	<?php if( in_array($FeedAttribs['type'], array('post_type', 'channel') ) ) { ?>
 		<li><a href="#feed_tab_appearance"><span><?php echo htmlspecialchars(__('Media Appearance', 'powerpress')); ?></span></a></li>
-		<li><a href="#feed_tab_other"><span><?php echo htmlspecialchars(__('Other Settings', 'powerpress')); ?></span></a></li> 
 	<?php } ?>
-	<?php if( in_array($FeedAttribs['type'], array('category', 'ttid', 'post_type') ) ) { ?>
+	<?php if( in_array($FeedAttribs['type'], array('category', 'ttid', 'post_type', 'channel') ) ) { ?>
 		<li><a href="#feed_tab_other"><span><?php echo htmlspecialchars(__('Other Settings', 'powerpress')); ?></span></a></li> 
 	<?php } ?>
   </ul>
@@ -249,24 +257,24 @@ function powerpress_admin_editfeed($type='', $type_value = '')
 	
 	<div id="feed_tab_feed" class="powerpress_tab">
 		<?php
-		//powerpressadmin_edit_feed_general($FeedSettings, $General);
-		//powerpressadmin_edit_feed_settings($FeedSettings, $General);
-		powerpressadmin_edit_feed_settings($FeedSettings, $General, $cat_ID, $feed_slug, $FeedAttribs );
+		powerpressadmin_edit_feed_settings($FeedSettings, $General, $FeedAttribs );
+		if( !empty($General['advanced_mode_2']) ) {
+			powerpressadmin_edit_tv($FeedSettings, $feed_slug);
+		}
 		?>
 	</div>
 	
 	<div id="feed_tab_itunes" class="powerpress_tab">
 		<?php
-		//powerpressadmin_edit_itunes_general($General);
 		if( $feed_slug != 'podcast' )
-			powerpressadmin_edit_itunes_general($General, $FeedSettings, $feed_slug, $cat_ID);
-		powerpressadmin_edit_itunes_feed($FeedSettings, $General, $feed_slug, $cat_ID, $FeedAttribs);
+			powerpressadmin_edit_itunes_general($FeedSettings, $General, $FeedAttribs);
+		powerpressadmin_edit_itunes_feed($FeedSettings, $General, $FeedAttribs);
 		?>
 	</div>
 	
-	<div id="feed_tab_tv" class="powerpress_tab">
+	<div id="feed_tab_artwork" class="powerpress_tab">
 		<?php
-		powerpressadmin_edit_tv($FeedSettings, $feed_slug);
+		powerpressadmin_edit_artwork($FeedSettings, $General);
 		?>
 	</div>
 	
@@ -280,7 +288,7 @@ function powerpress_admin_editfeed($type='', $type_value = '')
 	
 	<div id="feed_tab_other" class="powerpress_tab">
 		<?php
-		powerpressadmin_edit_basics_feed($General, $FeedSettings, $feed_slug)
+		powerpressadmin_edit_basics_feed($General, $FeedSettings, $feed_slug, $cat_ID, $FeedAttribs);
 		?>
 	</div>
 	<?php } ?>
@@ -297,14 +305,6 @@ function powerpress_admin_editfeed($type='', $type_value = '')
 <div class="clear"></div>
 <?php
 
-
-
-
-		//if( !$cat_ID && !$feed_slug )
-		//	powerpressadmin_edit_feed_general($FeedSettings, $General);
-		
-		
-		
 		
 }
 
@@ -431,7 +431,7 @@ function powerpressadmin_edit_feed_general($FeedSettings, $General)
 <?php
 }
 
-function powerpressadmin_edit_feed_settings($FeedSettings, $General, $cat_ID = false, $feed_slug = false, $FeedAttribs = array() )
+function powerpressadmin_edit_feed_settings($FeedSettings, $General, $FeedAttribs = array() )
 {
 	$SupportUploads = powerpressadmin_support_uploads();
 	if( !isset($FeedSettings['posts_per_rss']) )
@@ -455,15 +455,17 @@ function powerpressadmin_edit_feed_settings($FeedSettings, $General, $cat_ID = f
 			$feed_link = get_term_feed_link($FeedAttribs['term_taxonomy_id'], $FeedAttribs['taxonomy_type'], 'rss2');
 		}; break;
 		case 'post_type': {
-			$feed_link = get_post_type_archive_feed_link($FeedAttribs['post_type'], 'podcast');
+			$feed_link = get_post_type_archive_feed_link($FeedAttribs['post_type'], $FeedAttribs['feed_slug']);
 		}; break;
 		case 'channel': {
-			$feed_link = get_feed_link($FeedAttribs['channel']);
+			$feed_link = get_feed_link($FeedAttribs['feed_slug']);
 		}; break;
 		default: {
-			$feed_link = get_feed_link();
+			$feed_link = get_feed_link('podcast');
 		}; break;
 	}
+	
+	$cat_ID = $FeedAttribs['category_id'];
 	
 	if( $FeedAttribs['type'] == 'channel' && !empty($FeedAttribs['type'])	)
 	{
@@ -488,12 +490,12 @@ function powerpressadmin_edit_feed_settings($FeedSettings, $General, $cat_ID = f
 	}
 ?>
 <h3><?php echo __('Feed Settings', 'powerpress'); ?></h3>
+<?php if( $FeedAttribs['type'] == 'general' ) { ?>
+<p><?php echo __('Feed settings below only apply to the podcast only feed:', 'powerpress'); ?> <?php echo get_feed_link('podcast'); ?></p>
+<?php } ?>
 <table class="form-table">
 
-<?php
-if( !empty($FeedAttribs['type']) )
-{
-?>
+
 <tr valign="top">
 <th scope="row">
 <?php echo __('Feed Title', 'powerpress'); ?>
@@ -515,6 +517,9 @@ if( !empty($FeedAttribs['type']) )
 <?php } ?>
 </td>
 </tr>
+
+<?php if( !empty($General['advanced_mode_2']) ) { ?>
+<!-- start advanced features -->
 <tr valign="top">
 <th scope="row">
 <?php echo __('Feed Description', 'powerpress'); ?>
@@ -529,6 +534,10 @@ if( !empty($FeedAttribs['type']) )
 </td>
 </tr>
 
+<?php
+if( $FeedAttribs['type'] != 'general' ) // All types exept general settings
+{
+?>
 <tr valign="top">
 <th scope="row">
 <?php echo __('Feed Landing Page URL', 'powerpress'); ?> <br />
@@ -573,7 +582,7 @@ else
 </td>
 </tr>
 
-<?php } // End $feed_slug ?>
+<?php } // End not general settings ?>
 
 <tr valign="top">
 <th scope="row">
@@ -589,7 +598,7 @@ else
 </tr>
 
 <?php
-	if( $feed_slug )
+	if( in_array($FeedAttribs['type'], array('channel', 'general')) )
 	{
 ?>
 <tr valign="top">
@@ -599,43 +608,13 @@ else
 <td>
 <input type="checkbox" name="Feed[maximize_feed]" value="1" <?php if( !empty($FeedSettings['maximize_feed']) ) echo 'checked'; ?> />
 		<?php echo __('The latest 10 episodes in feed will remain as normal. The remaining 11+ older episodes in feed will have only the bare essential tags in order to maximize the number of episodes in the feed.', 'powerpress'); ?>
-		
-		<p style="margin-top: 0px; margin-bottomd: 0;"><?php echo powerpressadmin_notice( __('This feature is experimental, use at your own risk.', 'powerpress') ); ?></p>
-		
-
 <p style="margin-top: 0px; margin-bottomd: 0;"><?php echo __('NOTE: This feature may allow you to enter a larger value for the "Show the most recent" setting above. You must make sure that your feed does not exceed 512KB (1/2 MB) in size.', 'powerpress'); ?></p>
 </td>
 </tr>
 <?php
 	}
 ?>
-<tr valign="top">
-<th scope="row">
-<?php echo __('RSS2 Image', 'powerpress'); ?> <br />
-<span style="font-size: 85%; margin-left: 5px;"><?php echo __('Recommendation: Use iTunes image', 'powerpress'); ?></span>
-</th>
-<td>
-<input type="text" id="rss2_image" name="Feed[rss2_image]" style="width: 60%;" value="<?php echo ( !empty($FeedSettings['rss2_image'])? $FeedSettings['rss2_image']:''); ?>" maxlength="250" />
-<a href="#" onclick="javascript: window.open( document.getElementById('rss2_image').value ); return false;"><?php echo __('preview', 'powerpress'); ?></a>
 
-<p><?php echo __('Place the URL to the RSS image above.', 'powerpress'); ?> <?php echo __('Example', 'powerpress'); ?> http://mysite.com/images/rss.jpg</p>
-
-<p><?php echo __('RSS image should be at least 88 pixels wide and at least 31 pixels high in either .gif, .jpg and .png format.', 'powerpress'); ?></p>
-<p><strong><?php echo __('A square image that is 300 x 300 pixel or larger in .jpg format is recommended.', 'powerpress'); ?></strong></p>
-
-<?php if( $SupportUploads ) { ?>
-<p><input name="rss2_image_checkbox" type="checkbox" onchange="powerpress_show_field('rss_image_upload', this.checked)" value="1" /> <?php echo __('Upload new image', 'powerpress'); ?></p>
-<div style="display:none" id="rss_image_upload">
-	<label for="rss2_image"><?php echo __('Choose file', 'powerpress'); ?>:</label><input type="file" name="rss2_image_file"  />
-</div>
-<?php } ?>
-	<div>
-	<?php echo powerpressadmin_notice( __('Note: Do not forget to configure your iTunes image in the next tab, which may be used as your RSS image as well.', 'powerpress') ); ?>
-	</div>
-</td>
-</tr>
-
-<!-- start advanced features -->
 <tr valign="top">
 <th scope="row">
 
@@ -672,7 +651,7 @@ if( isset($Languages[ $rss_language ]) )
 </td>
 </tr>
 <!-- end advanced features -->
-
+<?php  } ?>
 </table>
 
 <!-- Location and frequency information -->
@@ -682,6 +661,8 @@ if( isset($Languages[ $rss_language ]) )
 	if( !isset($FeedSettings['frequency']) )
 		$FeedSettings['frequency'] = '';
 ?>
+<?php if( !empty($General['advanced_mode_2']) ) { ?>
+<!-- start advanced features -->
 <h3><?php echo __('Basic Show Information', 'powerpress'); ?></h3>
 <div id="rawvoice_basic_options">
 <table class="form-table">
@@ -701,7 +682,9 @@ if( isset($Languages[ $rss_language ]) )
 </tr>
 </table>
 </div>
+<!-- end advanced features -->
 <?php
+	}
 }
 
 
@@ -866,6 +849,9 @@ function powerpress_default_premium_label(event)
 		}
 		
 		// Podcast Channels and Custom Post Types...
+		
+		if( $FeedAttribs['type'] == 'channel' )
+		{
 		?>
 <h3><?php echo __('Custom Post Types', 'powerpress'); ?></h3>
 <p>
@@ -881,7 +867,7 @@ function powerpress_default_premium_label(event)
 <select name="Feed[custom_post_type]" class="bpp_input_med">
 <?php
 
-			$post_types = powerpress_admin_get_post_types_by_capability_type('post');
+			$post_types = powerpress_admin_get_post_types('post');
 			$custom_post_type = '';
 			if( !empty($FeedSettings['custom_post_type']) )
 				$custom_post_type = $FeedSettings['custom_post_type'];
@@ -899,7 +885,7 @@ function powerpress_default_premium_label(event)
 			
 			if( defined('POWERPRESS_CUSTOM_CAPABILITY_TYPE') )
 			{
-				$post_types = powerpress_admin_get_post_types_by_capability_type( POWERPRESS_CUSTOM_CAPABILITY_TYPE );
+				$post_types = powerpress_admin_get_post_types( POWERPRESS_CUSTOM_CAPABILITY_TYPE );
 				if( !empty($post_types) )
 				{
 					while( list($index,$value) = each($post_types) )
@@ -922,7 +908,7 @@ function powerpress_default_premium_label(event)
 </tr>
 </table>
 		<?php
-		
+		}
 	} // else if channel
 }
 
@@ -937,7 +923,7 @@ function powerpressadmin_edit_appearance_feed($General,  $FeedSettings, $feed_sl
 <?php echo __('Disable Player', 'powerpress'); ?>
 </th>
 <td>
-	<input name="DisablePlayerFor" type="checkbox" <?php if( isset($General['disable_player'][$feed_slug]) ) echo 'checked '; ?> value="1" /> <?php echo __('Do not display web player or links for this podcast channel.', 'powerpress'); ?>
+	<input name="DisablePlayerFor" type="checkbox" <?php if( isset($General['disable_player'][$feed_slug]) ) echo 'checked '; ?> value="1" /> <?php echo __('Do not display web player or links for this podcast.', 'powerpress'); ?>
 	<input type="hidden" name="UpdateDisablePlayer" value="<?php echo $feed_slug; ?>" />
 </td>
 </tr>
@@ -946,8 +932,11 @@ function powerpressadmin_edit_appearance_feed($General,  $FeedSettings, $feed_sl
 
 }
 
-function powerpressadmin_edit_itunes_feed($FeedSettings, $General, $feed_slug=false, $cat_ID=false, $FeedAttribs = array() )
+function powerpressadmin_edit_itunes_feed($FeedSettings, $General, $FeedAttribs = array() )
 {
+	$feed_slug = $FeedAttribs['feed_slug'];
+	$cat_ID = $FeedAttribs['category_id'];
+	
 	$SupportUploads = powerpressadmin_support_uploads();
 	if( !isset($FeedSettings['itunes_subtitle']) )
 		$FeedSettings['itunes_subtitle'] = '';
@@ -972,20 +961,13 @@ function powerpressadmin_edit_itunes_feed($FeedSettings, $General, $feed_slug=fa
 	if( !isset($FeedSettings['itunes_new_feed_url']) )
 		$FeedSettings['itunes_new_feed_url'] = '';
 	
-?>
-<h3><?php echo __('iTunes Feed Settings', 'powerpress'); ?></h3>
-
-<?php
 	$AdvancediTunesSettings = !empty($FeedSettings['itunes_summary']);
 	if( !empty($FeedSettings['itunes_subtitle']) )
 		$AdvancediTunesSettings = true;
-	
-	if( !$AdvancediTunesSettings ) {
+
 ?>
-	<div style="margin-left: 230px; margin-bottom: 10px; font-weight: bold;"><a href="#" onclick="document.getElementById('advanced_itunes_settings').style.display='block';return false;"><?php echo __('Show Advanced iTunes Settings', 'powerpress'); ?></a></div>
-<?php } ?>
-<!-- start advanced features -->
-<div id="advanced_itunes_settings" <?php echo ($AdvancediTunesSettings?'':'style="display: none;"'); ?>>
+
+<h3><?php echo __('iTunes Settings', 'powerpress'); ?></h3>
 <table class="form-table">
 <tr valign="top">
 <th scope="row">
@@ -1007,6 +989,9 @@ function powerpressadmin_edit_itunes_feed($FeedSettings, $General, $feed_slug=fa
 </td>
 </tr>
 
+<?php
+	if( !empty($General['advanced_mode_2']) ) {
+?>
 <tr valign="top">
 <th scope="row">
 
@@ -1034,8 +1019,7 @@ function powerpressadmin_edit_itunes_feed($FeedSettings, $General, $feed_slug=fa
 </td>
 </tr>
 </table>
-</div>
-<!-- end advanced features -->
+
 
 <table class="form-table">
 <tr valign="top">
@@ -1047,10 +1031,14 @@ function powerpressadmin_edit_itunes_feed($FeedSettings, $General, $feed_slug=fa
 <p><?php echo __('Enter up to 12 keywords separated by commas.', 'powerpress'); ?></p>
 </td>
 </tr>
+<?php
+	} // end advanced mode
+?>
 
 <tr valign="top">
 <th scope="row">
 <?php echo __('iTunes Category', 'powerpress'); ?> 
+<span class="powerpress-required"><?php echo __('Required', 'powerpress'); ?></span>
 </th>
 <td>
 <select name="Feed[itunes_cat_1]" class="bpp_input_med">
@@ -1145,45 +1133,11 @@ while( list($value,$desc) = each($explicit) )
 </select>
 </td>
 </tr>
-
-<tr valign="top">
-<th scope="row">
-<?php echo __('iTunes Image', 'powerpress'); ?> 
-</th>
-<td>
-<input type="text" id="itunes_image" name="Feed[itunes_image]" style="width: 60%;" value="<?php echo ( !empty($FeedSettings['itunes_image'])? $FeedSettings['itunes_image']:''); ?>" maxlength="250" />
-<a href="#" onclick="javascript: window.open( document.getElementById('itunes_image').value ); return false;"><?php echo __('preview', 'powerpress'); ?></a>
-
-<p><?php echo powerpressadmin_notice( __('iTunes image specifications changed in May, 2012', 'powerpress') ); ?></p>
-<p><?php echo __('iTunes image should be at least 1400 x 1400 pixels in .jpg or .png format using RGB color space.', 'powerpress'); ?> <?php echo __('Example', 'powerpress'); ?>: http://example.com/images/itunes.jpg
- </p>
-
-<p><strong><?php echo __('A square image that is 1400 x 1400 pixels in .jpg format for the web (72ppi) is recommended.', 'powerpress'); ?></strong></p>
-
-<p>
-<?php echo __('This image is for your listing on the iTunes podcast directory and may also be used by other directories like Blubrry. It is not the artwork that is displayed during episode playback. That artwork needs to be saved into the media file in the form of tags (ID3 tags for mp3) following the production of the media file.', 'powerpress'); ?>
-</p>
-
-<p><?php echo __('Note: If you change the iTunes image without changing the file name it may take some time (days or even months) for iTunes to update the image in the iTunes Podcast Directory.', 'powerpress'); ?> 
-<?php echo sprintf( __('Please contact %s if you are having issues with your image changes not appearing in iTunes.', 'powerpress'), '<a href="http://www.apple.com/support/itunes/">'. __('iTunes Support', 'powerpress') .'</a>'); ?></p>
-<?php if( $SupportUploads ) { ?>
-
-<p><input name="itunes_image_checkbox" type="checkbox" onchange="powerpress_show_field('itunes_image_upload', this.checked)" value="1" /> <?php echo __('Upload new image', 'powerpress'); ?> &nbsp; 
-	<span style="font-size:85%;">(<?php echo __('Using this option should update your image on iTunes within 24 hours', 'powerpress'); ?>)</span>
-</p>
-<div style="display:none" id="itunes_image_upload">
-	<label for="itunes_image_file"><?php echo __('Choose file', 'powerpress'); ?>:</label><input type="file" name="itunes_image_file"  /><br />
-	<div style="margin-left: 85px;"><input name="itunes_image_checkbox_as_rss" type="checkbox" value="1" /> <?php echo __('Also use as RSS image', 'powerpress'); ?></div>
-</div>
-<?php } ?>
-</td>
-</tr>
-
-
+<?php if( !empty($General['advanced_mode_2']) ) { ?>
 <!-- start advanced features -->
 <tr valign="top">
 <th scope="row">
-<?php echo __('iTunes Talent Name', 'powerpress'); ?> <br />
+<?php echo __('iTunes Talent Name', 'powerpress'); ?> 
 </th>
 <td>
 <input type="text" name="Feed[itunes_talent_name]" class="bpp_input_med" value="<?php echo $FeedSettings['itunes_talent_name']; ?>" maxlength="250" /><br />
@@ -1192,19 +1146,23 @@ while( list($value,$desc) = each($explicit) )
 </td>
 </tr>
 <!-- end advanced features -->
-
+<?php } ?>
 
 <tr valign="top">
 <th scope="row">
-<?php echo __('iTunes Email', 'powerpress'); ?>
+<?php echo __('iTunes Email', 'powerpress'); ?> 
+<span class="powerpress-required"><?php echo __('Required', 'powerpress'); ?></span>
 </th>
 <td>
 <input type="text" name="Feed[email]" class="bpp_input_med" value="<?php echo $FeedSettings['email']; ?>" maxlength="250" />
 <div>(<?php echo __('iTunes will email this address when your podcast is accepted into the iTunes Directory.', 'powerpress'); ?>)</div>
 </td>
 </tr>
+</table>
 
+<?php if( !empty($General['advanced_mode_2']) ) { ?>
 <!-- start advanced features -->
+<table class="form-table">
 	<tr valign="top">
 	<th scope="row" >
 
@@ -1278,7 +1236,6 @@ while( list($value,$desc) = each($explicit) )
 	</td>
 	</tr>
 </table>
-	<!-- end advanced features -->
 <?php if( defined('POWERPRESS_NOT_SUPPORTED') ) { // start powerpress not supported features ?>
 <fieldset style="border: 1px dashed #333333;">
 <legend style="margin: 0 20px; padding: 0 5px; font-weight: bold;"><?php echo __('Features Not Supported by PowerPress', 'powerpress');  ?></legend>
@@ -1332,7 +1289,6 @@ while( list($value,$desc) = each($explicit) )
 		</div>
 		
 	</div>
-<!-- start advanced features -->
 <div id="permanent_itunes_settings">
 <table class="form-table">
 	
@@ -1359,6 +1315,8 @@ while( list($value,$desc) = each($explicit) )
 </div>
 </fieldset>
 <?php } // End PowerPress not supported features ?>
+<!-- end advanced features -->
+<?php } // end other advanced options ?>
 <?php
 }
 	

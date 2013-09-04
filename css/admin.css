@@ -1,7 +1,8 @@
 /* admin.css */
-
-.powerpress-notice {
-	margin-top: 10px;
+.powerpress-notice,
+div.powerpress-notice,
+.wrap div.powerpress-notice {
+	margin-top: 20px;
 	margin-bottom: 10px;
 	line-height: 29px;
 	font-size: 12px;
@@ -9,7 +10,9 @@
 	border-style: solid;
 	font-weight: bold;
 }
-.powerpress-error {
+.powerpress-error,
+div.powerpress-error,
+.wrap div.powerpress-error {
 	margin-top: 10px;
 	margin-bottom: 10px;
 	line-height: 29px;
@@ -17,9 +20,10 @@
 	border-width: 1px;
 	border-style: solid;
 	font-weight: bold;
+	margin-top: 20px;
 }
 #powerpress_settings {
-	background-image:url(http://images.blubrry.com/powerpress/blubrry_logo4.png);
+	background-image:url(http://images.blubrry.com/powerpress/blubrry_logo5.png);
 	background-repeat: no-repeat;
 	background-position: bottom right;
 }
@@ -185,3 +189,185 @@ padding-bottom: 15px;
 	padding: 0;
 }
 
+#powerpress_settings label.powerpress-normal-font {
+	font-size: 11px;
+}
+#powerpress_admin_header {
+	vertical-align: text-bottom;
+}
+#powerpress_admin_header h2 {
+/*	float: left; */
+	display: inline-block;
+}
+#powerpress_admin_header .powerpress-mode {
+	margin-left: 14px;
+	display: inline-block;
+	color: #FF6600;
+	font-size: 15px;
+	font-weight: bold;
+}
+
+#powerpress_steps {
+	margin: 60px 0 40px;
+}
+.powerpress-required {
+	font-size: 90%;
+	color: #CC0000;
+	margin-left: 12px;
+}
+
+.powerpress-step {
+	display: inline-block;
+	float: left;
+	width: 200px;
+	height: 170px;
+	border-right: 1px solid #ECECEC;
+	margin-left: 10px;
+	margin-right: 0;
+	text-align: top;
+	position: relative;
+	padding-top: 10px;
+}
+#powerpress_steps h3 {
+	color: #CCCCCC;
+	margin: 0;
+	font-size: 24px;
+	top: -16px;
+	left: 0;
+	position: absolute;
+}
+#powerpress_steps p {
+	font-size: 20px;
+	margin: 20px 4px;
+	color: #CCCCCC;
+	line-height:120%
+}
+#powerpress_steps a {
+	color: #CCCCCC;
+}
+#powerpreess_step_1 {
+	background-image: url('../images/DownArrow.png');
+	background-repeat:no-repeat;
+	background-position: 6px bottom;
+}
+
+#powerpress_steps .active-step h3 {
+	color: #337EC9;
+	
+}
+#powerpress_steps .active-step p,
+#powerpress_steps .active-step a {
+	color: #787878;
+	
+}
+
+#powerpress_steps>:first-child  {
+	margin-left: 0;
+}
+.powerpress-step-complete {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	height: 46px;
+	width: 150px;
+}
+.powerpress-step-complete-box {
+	border: 1px solid #CCCCCC;
+	width: 24px;
+	height: 24px;
+	display: inline-block;
+	position: absolute;
+	bottom: -2px;
+	right: 20px;
+}
+.powerpress-step-completed {
+	background-image: url('../images/Check.png');
+	background-repeat:no-repeat;
+	background-position: right 2px;
+}
+
+.blubrry-services {
+	color: #337EC9;
+	font-size: 18px;
+	line-height: 1.2;
+}
+.blubrry-services p {
+	margin: 0 70px 0 0;
+	padding: 0;
+}
+.blubrry-services strong {
+	color: #FF6600;
+	font-weight: normal;
+}
+.blubrry-services p.top-lines {
+	margin-right: 0;
+}
+.blubrry-services a {
+	color: #FF6600;
+	font-size: 20px;
+	line-height: 2;
+}
+.blubrry-services .blubrry-hosting,
+.blubrry-services .blubrry-stats {
+	float: left;
+	width: 230px;
+	height: 140px;
+	background-color: #ECECEC;
+	padding: 10px;
+	margin-top: 10px;
+}
+.blubrry-services .blubrry-stats {
+	background-image: url('../images/StatsIcon.png');
+	background-repeat:no-repeat;
+	background-position: bottom right;
+}
+
+.blubrry-services .blubrry-hosting {
+	margin-right: 50px;
+	background-image: url('../images/BlubrryIcon.png');
+	background-repeat:no-repeat;
+	background-position: bottom right;
+}
+
+
+@media screen and (min-width: 1px) and (max-width: 819px) {
+	.powerpress-step {
+		width: 170px;
+	}
+	#powerpress_steps p {
+		font-size: 16px;
+		margin: 20px 4px;
+	}
+	.powerpress-step-complete {
+		width: 125px;
+	}
+	.powerpress-step-complete p {
+		padding-top: 5px;
+	}
+	.blubrry-services .blubrry-hosting {
+		margin-right: 20px;
+	}
+} 
+@media screen and (min-width: 1px) and (max-width: 729px) {
+	.powerpress-step {
+		width: 130px;
+	}
+	#powerpreess_step_1 {
+		background-position: 1px bottom;
+	}
+	#powerpress_steps p {
+		margin: 10px 4px;
+	}
+	.powerpress-step-complete {
+		width: 110px;
+	}
+	#powerpress_steps .powerpress-step-complete p {
+		padding-top: 20px;
+		font-size: 12px;
+	}
+	.blubrry-services .blubrry-hosting {
+		margin-right: 10px;
+	}
+} 
+
+ 
