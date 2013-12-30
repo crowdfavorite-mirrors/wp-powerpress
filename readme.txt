@@ -2,8 +2,8 @@
 Contributors: amandato, blubrry
 Tags: podcasting, podcast, podcaster, itunes, enclosure, zune, iphone, youtube, viddler, blip.tv, ustream, podcasting, audio, video, rss2, feed, player, media, rss, mp3, music, embed, feedburner, statistics, stats, flv, flash, id3, episodes, blubrry, webm, mp4, m4v, wordpressmu, mu, wordpress mu, multisite, multi site, mediacaster, post, plugin, posts, simple, social, dashboard, TSG, Buzzsprout, MTR, WP-boxCast, CastMyBlog, simple podcasting, seriously simple podcasting, seriously-simple-podcasting, podlove, podcast.de
 Requires at least: 3.0
-Tested up to: 3.6.1
-Stable tag: 5.0.2
+Tested up to: 3.7.1
+Stable tag: 5.0.3
 Donate link: http://create.blubrry.com/
 License: GPLv2 or later
 
@@ -109,6 +109,7 @@ We now offer one-on-one consulting via Gotomeeting, Skype or phone.
  * [Message Flow](http://wordpress.org/extend/plugins/message-flow/) - generates a CoverFlow-like interface for your blog posts with podcast episodes. For podcasts, use shortocde `[message-flow podcasts_only="true"]`.
  * [Eli's PowerPress Addon Widget](http://wordpress.org/extend/plugins/podpress-addons/) - Adds a sidebar widget that lists your podcast episodes linked to the play in a new window PowerPress player.
  * [PowerPress Posts From MySQL](http://wordpress.org/extend/plugins/powerpress-posts-from-mysql/developers/) - Creates blog posts with PowerPress podcast episode information from a MySQL table.
+ * [Featured Podcast Widget](http://wordpress.org/plugins/featured-podcast-widget/) - A widget that enables you to display your latest podcast from a category or featured podcast utilising the PowerPress plugin's default player.
  * [Subscribe Sidebar plugin by Blubrry](http://wordpress.org/extend/plugins/subscribe-sidebar/) - A sidebar widget that provides a list of "Subscribe" links to your sidebar.
  
  
@@ -171,6 +172,13 @@ To install Blubrry PowerPress manually, follow these steps:
 = Next Major Release Announcements =
 * PowerPress 6.0+ will no longer be compatible with WordPress 3.0.x, 3.1.x and 3.2.x. Please upgrade to WordPress 3.3 or newer to install future versions of PowerPress.
 * Translation support will change in PowerPress 6.0+. Translations will be packaged in a sepraate plugin made available on WordPress.org. This will allow us to release translations separately and more often.
+* We are looking for beta testers! If you would like to beta test future versions of PowerPress, please [contact us](http://www.blubrry.com/contact.php) with your name and email.
+
+= 5.0.3 =
+* Released on 12/3/2013
+* Fixed bug with feed title not properly XML encoding ampersand. (Thanks Robin for bringing to our attention!) 
+* Updated supported version number to WordPress 3.7.1
+
 
 = 5.0.2 =
 * Released on 09/23/2013
