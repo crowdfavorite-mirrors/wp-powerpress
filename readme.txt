@@ -2,8 +2,8 @@
 Contributors: amandato, blubrry
 Tags: podcasting, podcast, podcaster, itunes, enclosure, zune, iphone, youtube, viddler, blip.tv, ustream, podcasting, audio, video, rss2, feed, player, media, rss, mp3, music, embed, feedburner, statistics, stats, flv, flash, id3, episodes, blubrry, webm, mp4, m4v, wordpressmu, mu, wordpress mu, multisite, multi site, mediacaster, post, plugin, posts, simple, social, dashboard, TSG, Buzzsprout, MTR, WP-boxCast, CastMyBlog, simple podcasting, seriously simple podcasting, seriously-simple-podcasting, podlove, podcast.de
 Requires at least: 3.0
-Tested up to: 3.9
-Stable tag: 5.0.7
+Tested up to: 3.9.1
+Stable tag: 5.0.9
 Donate link: http://create.blubrry.com/
 License: GPLv2 or later
 
@@ -173,6 +173,26 @@ To install Blubrry PowerPress manually, follow these steps:
 * PowerPress 6.0+ will no longer be compatible with WordPress 3.0.x, 3.1.x and 3.2.x. Please upgrade to WordPress 3.3 or newer to install future versions of PowerPress.
 * Translation support will change in PowerPress 6.0+. Translations will be packaged in a separate plugin made available on WordPress.org. This will allow us to release translations separately and more often.
 * We are looking for beta testers! If you would like to beta test future versions of PowerPress, please [contact us](http://www.blubrry.com/contact.php) with your name and email.
+
+
+= 5.0.9 =
+* Released on 7/28/2014
+* Fixed wo logic errors in the powerpress-player.php (Thanks Tom from the Hawaii Vacation Connection podcast for bringing to our attention)
+* Added support for the [PowerPress in your Language](http://create.blubrry.com/resources/powerpress/powerpress-language/) add-on plugin. 
+* Removed support for the [PowerPress in your Language](http://create.blubrry.com/resources/powerpress/powerpress-language/), plugin was rejected by WordPress.org. We are doing our best to come up with another solution.
+* Screenshot files have been moved to the assets folder, they will no longer be packaged with the plugin's zip file.
+* Fixed PHP warning in powerpressadmin.php on line 2405 (Thanks Robin for letting us know)
+* Added notice for FeedBurner setting "We recommend that you disabled SmartCast when using PowerPress with FeedBurner",  otherwise FeedBuner will duplicate iTunes descriptions for episodes. (Thanks Daniel Lewis for suggestion)
+* Added [No-Fault Hosting](http://create.blubrry.com/resources/podcast-media-hosting/no-fault/) support for all Blubrry Podcast Hosting customers. In addition, starting August 1st 2014, publishing quotas will be reset on the 1st of each month.
+* PowerPress 6.0 beta will be available for testing the end of this week. If you are interested in beta testing, please [contact us](http://www.blubrry.com/contact.php).
+
+
+= 5.0.8 =
+* Released on 6/11/2014
+* Added better error reporting logic for services and statistics.
+* Added option to get podcast meta data optionally from a value (rather than from database)
+* Added logic to override the html content-type when a HTTP HEAD request is made for a feed URL
+* Fixed notice message on line 220 of powerpress.php (thanks brandonferens for letting us know about the notice message)
 
 
 = 5.0.7 =

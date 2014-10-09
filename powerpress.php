@@ -3,7 +3,7 @@
 Plugin Name: Blubrry PowerPress
 Plugin URI: http://create.blubrry.com/resources/powerpress/
 Description: <a href="http://create.blubrry.com/resources/powerpress/" target="_blank">Blubrry PowerPress</a> adds podcasting support to your blog. Features include: media player, 3rd party statistics, iTunes integration, Blubrry Services (Media Statistics and Hosting) integration and a lot more.
-Version: 5.0.7
+Version: 5.0.9
 Author: Blubrry
 Author URI: http://www.blubrry.com/
 Change Log:
@@ -32,16 +32,13 @@ if( !function_exists('add_action') )
 	die("access denied.");
 	
 // WP_PLUGIN_DIR (REMEMBER TO USE THIS DEFINE IF NEEDED)
-define('POWERPRESS_VERSION', '5.0.7' );
+define('POWERPRESS_VERSION', '5.0.9' );
 
 // Translation support:
 if ( !defined('POWERPRESS_ABSPATH') )
 	define('POWERPRESS_ABSPATH', dirname(__FILE__) );
 
-// Translation support loaded:
-load_plugin_textdomain('powerpress', // domain / keyword name of plugin
-		POWERPRESS_ABSPATH .'/languages', // Absolute path
-		basename(POWERPRESS_ABSPATH).'/languages' ); // relative path in plugins folder
+
 
 /////////////////////////////////////////////////////
 // The following define options should be placed in your
@@ -217,7 +214,7 @@ function powerpress_content($content)
 	if( $GeneralSettings['display_player'] == 0 )
 		return $content;
 		
-	if( current_filter() == 'the_excerpt' && !$GeneralSettings['display_player_excerpt'] )
+	if( current_filter() == 'the_excerpt' && empty($GeneralSettings['display_player_excerpt']) )
 		return $content; // We didn't want to modify this since the user didn't enable it for excerpts
 		
 	// Figure out which players are alerady in the body of the page...
@@ -396,6 +393,18 @@ powerpress_url = '<?php echo powerpress_get_root_url(); ?>';
 }
 
 add_action('wp_head', 'powerpress_header');
+
+function powerpress_exit_on_http_head($return)
+{
+	if( is_feed() )
+	{
+		// Set the content type for HTTP headers...
+		header('Content-Type: ' . feed_content_type('rss-http') . '; charset=' . get_option('blog_charset'), true);
+	}
+	return $return;
+}
+
+add_filter('exit_on_http_head', 'powerpress_exit_on_http_head' );
 
 function powerpress_rss2_ns()
 {
@@ -1307,14 +1316,18 @@ function powerpress_request($qv)
 
 add_filter('request', 'powerpress_request');
 
-// May be used for future use
-/*
+
 function powerpress_plugins_loaded()
 {
-	
+	//if( !defined('POWERPRESS_LANGUAGES_PLUGIN') )
+	//{
+		// Translation support loaded:
+		load_plugin_textdomain('powerpress', // domain / keyword name of plugin
+			POWERPRESS_ABSPATH .'/languages', // Absolute path
+			basename(POWERPRESS_ABSPATH).'/languages' ); // relative path in plugins folder
+	//}
 }
 add_action('plugins_loaded', 'powerpress_plugins_loaded');
-*/
 
 
 function powerpress_w3tc_can_print_comment($settings)
@@ -2421,14 +2434,16 @@ function powerpress_get_enclosure($post_id, $feed_slug = 'podcast')
 	return false;
 }
 
-function powerpress_get_enclosure_data($post_id, $feed_slug = 'podcast')
+function powerpress_get_enclosure_data($post_id, $feed_slug = 'podcast', $raw_data = false)
 {
-	if( $feed_slug == 'podcast' || $feed_slug == '' )
+	if( $raw_data )
+		$MetaData = $raw_data;
+	else if( $feed_slug == 'podcast' || $feed_slug == '' )
 		$MetaData = get_post_meta($post_id, 'enclosure', true);
 	else
 		$MetaData = get_post_meta($post_id, '_'. $feed_slug .':enclosure', true);
 	
-	if( !$MetaData )
+	if( empty($MetaData) )
 		return false;
 	
 	$MetaParts = explode("\n", $MetaData, 4);
@@ -2758,6 +2773,21 @@ if( is_admin() )
 {
 	require_once(POWERPRESS_ABSPATH.'/powerpressadmin.php');
 	register_activation_hook( __FILE__, 'powerpress_admin_activate' );
+}
+
+if( defined('POWERPRESS_PLAYLIST') && POWERPRESS_PLAYLIST && file_exists(POWERPRESS_ABSPATH.'/powerpress-playlist.php') )
+{
+	require_once(POWERPRESS_ABSPATH.'/powerpress-playlist.php');
+}
+
+if( defined('POWERPRESS_SUBSCRIBE') && POWERPRESS_SUBSCRIBE && file_exists(POWERPRESS_ABSPATH.'/powerpress-subscribe.php') )
+{
+	require_once(POWERPRESS_ABSPATH.'/powerpress-subscribe.php');
+}
+
+if( defined('POWERPRESS_NEW_CODE') && POWERPRESS_NEW_CODE && file_exists(POWERPRESS_ABSPATH.'/powerpress-new-code.php') )
+{
+	require_once(POWERPRESS_ABSPATH.'/powerpress-new-code.php');
 }
 
 ?>
