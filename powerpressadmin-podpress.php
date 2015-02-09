@@ -47,7 +47,7 @@ if( !function_exists('add_action') )
 			if( !empty($powerpress_settings['default_url']) )
 			{
 				$PodpressSettings['mediaWebPath'] = $powerpress_settings['default_url'];
-				powerpress_page_message_add_notice( sprintf(__('Unable to detect PodPress media URL setting. Using the PowerPress setting "Default Media URL" (%s) instead.', 'powerpress'), $PodpressSettings['mediaWebPath']) );
+				powerpress_page_message_add_notice( sprintf(__('Unable to detect PodPress media URL setting. Using the PowerPress setting "Default Media URL" (%s) instead.', 'powerpress'), esc_attr($PodpressSettings['mediaWebPath']) ) );
 			}
 			else
 			{
@@ -115,7 +115,7 @@ if( !function_exists('add_action') )
 					{
 						// display a warning here...
 						if( $hide_errors == false )
-							powerpress_page_message_add_error( sprintf( __('Error decoding PodPress data for post "%s"', 'powerpress'), $row['post_title']) );
+							powerpress_page_message_add_error( sprintf( __('Error decoding PodPress data for post "%s"', 'powerpress'), est_attr($row['post_title']) ) );
 						continue;
 					}
 					
@@ -199,9 +199,6 @@ if( !function_exists('add_action') )
 							
 							if( $itunes_data['itunes:summary'] != '##PostExcerpt##' && $itunes_data['itunes:summary'] != '##Global##' && $itunes_data['itunes:summary'] != '' )
 								$return[ $row['ID'] ]['itunes']['summary'] = $itunes_data['itunes:summary'];
-							
-							if( $itunes_data['itunes:keywords'] != '##WordPressCats##' && $itunes_data['itunes:keywords'] != '##Global##' && $itunes_data['itunes:keywords'] != '' )
-								$return[ $row['ID'] ]['itunes']['keywords'] = $itunes_data['itunes:keywords'];
 								
 							if( $itunes_data['itunes:author'] != '##Global##' && $itunes_data['itunes:author'] != '' )
 								$return[ $row['ID'] ]['itunes']['author'] = $itunes_data['itunes:author'];

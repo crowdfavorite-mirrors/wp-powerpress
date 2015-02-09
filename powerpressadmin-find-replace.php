@@ -9,15 +9,15 @@
 		global $wpdb;
 		
 		$query = "SELECT meta_id, post_id, meta_key, meta_value FROM {$wpdb->postmeta} WHERE meta_key LIKE \"%enclosure\"";
-		$results = mysql_query($query);
-		while( $row = mysql_fetch_assoc($results) )
+		$results_data = $wpdb->get_results($query, ARRAY_A);
+		
+		while( list( $index, $row) = each($results_data) ) //  = mysql_fetch_assoc($results) )
 		{
 			list($url) = @explode("\n", $row['meta_value'], 2 );
 			$url = trim($url);
 			if( $find_string == '' || strstr($url, $find_string) )
 				$Episodes[ $row['meta_id'] ] = $row;
 		}
-		mysql_free_result($results);
 		return $Episodes;
 	}
 	
@@ -33,6 +33,7 @@
 		if( isset($_POST['FindReplace']) )
 		{
 			$FindReplace = $_POST['FindReplace'];
+			$FindReplace['step'] = intval( $FindReplace['step'] );
 			if( $FindReplace['step'] == 2 || $FindReplace['step'] == 3 )
 			{
 				$success_count = 0;
@@ -56,9 +57,9 @@
 					$g_FindReplaceResults[ $meta_id ] = $row;
 					$g_FindReplaceResults[ $meta_id ]['old_url'] = $old_url;
 					$g_FindReplaceResults[ $meta_id ]['find_readable'] = str_replace($FindReplace['find_string'],
-							sprintf('<span class="find_string strong">%s</span>', $FindReplace['find_string']), $old_url);
+							sprintf('<span class="find_string strong">%s</span>', esc_attr($FindReplace['find_string'])), esc_attr($old_url) );
 					$g_FindReplaceResults[ $meta_id ]['replace_readable'] = str_replace($FindReplace['find_string'],
-							sprintf('<span class="replace_string strong">%s</span>', $FindReplace['replace_string']), $old_url);
+							sprintf('<span class="replace_string strong">%s</span>', esc_attr($FindReplace['replace_string']) ), esc_attr($old_url) );
 					$new_url = str_replace($FindReplace['find_string'],$FindReplace['replace_string'], $old_url);
 					$g_FindReplaceResults[ $meta_id ]['new_url'] = $new_url;
 					
@@ -152,6 +153,7 @@
 		if( isset($_POST['FindReplace']) )
 		{
 			$FindReplace = $_POST['FindReplace'];
+			$FindReplace['step'] = intval( $FindReplace['step'] );
 		}
 		else
 		{
@@ -169,6 +171,8 @@
 		{
 			$FindReplaceResults = powerpressadmin_find_replace_get_results();
 		}
+		
+		//$FindReplace = powerpress_esc_html($FindReplace); // Prevent XSS
 ?>
 
 <script type="text/javascript"><!--
@@ -211,7 +215,7 @@ dt {
 </style>
 
 <input type="hidden" name="action" value="powerpress-find-replace" />
-<input type="hidden" name="FindReplace[step]" value="<?php echo $FindReplace['step']; ?>" id="replace_step" />
+<input type="hidden" name="FindReplace[step]" value="<?php echo esc_attr($FindReplace['step']); ?>" id="replace_step" />
 
 <h2><?php echo __("Find and Replace Episode URLs", 'powerpress'); ?></h2>
 
@@ -221,16 +225,16 @@ dt {
 	<tr valign="top">
 	<th scope="row"><?php echo __("Find in URL", 'powerpress'); ?></th> 
 	<td>
-			<input type="text" id="find_string" name="FindReplace[find_string]" style="width: 50%;" value="<?php echo $FindReplace['find_string']; ?>" maxlength="250" <?php if( $FindReplace['step'] != 1 ) { echo ' readOnly'; } ?> />
-			<?php if( $FindReplace['step'] != 1 ) { ?><a href="#" onclick="jQuery('#replace_step').val('1');document.forms[0].submit();"><?php echo __('Modify', 'powerpress'); ?></a><?php } ?>
+			<input type="text" id="find_string" name="FindReplace[find_string]" style="width: 50%;" value="<?php echo esc_attr($FindReplace['find_string']); ?>" maxlength="250" <?php if( $FindReplace['step'] != 1 ) { echo ' readOnly'; } ?> />
+			<?php if( $FindReplace['step'] != 1 ) { ?><a href="#" onclick="jQuery('#replace_step').val('1');jQuery('#replace_step').closest('form').submit();return false;"><?php echo __('Modify', 'powerpress'); ?></a><?php } ?>
 			<p style="margin: 0; font-size: 90%;"><?php echo __('Example', 'powerpress'); ?>: http://www.oldsite.com/</p>
 	</td>
 	</tr>
 	<tr valign="top">
 	<th scope="row"><?php echo __('Replace with', 'powerpress'); ?></th> 
 	<td>
-			<input type="text" id="replace_string" name="FindReplace[replace_string]" style="width: 50%;" value="<?php echo $FindReplace['replace_string']; ?>" maxlength="250" <?php if( $FindReplace['step'] != 1 ) { echo ' readOnly'; } ?> />
-			<?php if( $FindReplace['step'] != 1 ) { ?><a href="#" onclick="jQuery('#replace_step').val('1');document.forms[0].submit();"><?php echo __('Modify', 'powerpress'); ?></a><?php } ?>
+			<input type="text" id="replace_string" name="FindReplace[replace_string]" style="width: 50%;" value="<?php echo esc_attr($FindReplace['replace_string']); ?>" maxlength="250" <?php if( $FindReplace['step'] != 1 ) { echo ' readOnly'; } ?> />
+			<?php if( $FindReplace['step'] != 1 ) { ?><a href="#" onclick="jQuery('#replace_step').val('1');jQuery('#replace_step').closest('form').submit();return false;"><?php echo __('Modify', 'powerpress'); ?></a><?php } ?>
 			<p style="margin: 0; font-size: 90%;"><?php echo __('Example', 'powerpress'); ?>: http://www.newsite.com/</p>
 	</td>
 	</tr>
@@ -245,7 +249,7 @@ dt {
 ?>
 <h2><?php echo ($FindReplace['step'] == 2 ? __('Preview Changes', 'powerpress') : __('Change Results', 'powerpress') ); ?></h2>
 
-<p><?php echo sprintf( __('Found %d results with "%s"', 'powerpress'), count($FindReplaceResults), "<span class=\"find_string strong\">{$FindReplace['find_string']}</span>" ); ?></p>
+<p><?php echo sprintf( __('Found %d results with "%s"', 'powerpress'), count($FindReplaceResults), "<span class=\"find_string strong\">". esc_attr($FindReplace['find_string']). "</span>" ); ?></p>
 
 <ol>
 <?php
@@ -274,7 +278,7 @@ dt {
 			 </dt>
 			 <dd>
 			  <?php echo __('Replace', 'powerpress') .': '. $row['replace_readable']; ?>
-			 (<a href="<?php echo $row['new_url']; ?>" target="_blank"><?php echo __('test link', 'powerpress'); ?></a>)
+			 (<a href="<?php echo esc_attr($row['new_url']); ?>" target="_blank"><?php echo __('test link', 'powerpress'); ?></a>)
 			 </dd>
 		</dl>
 	</li>
@@ -286,15 +290,15 @@ dt {
 
 <?php if( $FindReplace['step'] == 1 ) { ?>
 <p class="submit">
-	<input type="submit" name="Submit" id="powerpress_save_button" class="button-primary" value="Find and Preview Changes" onclick="jQuery('#replace_step').val('2');" />
+	<input type="submit" name="Submit" id="powerpress_save_button" class="button-primary" value="<?php echo __('Find and Preview Changes', 'powerpress'); ?>" onclick="jQuery('#replace_step').val('2');" />
 </p>
 <?php } else if( $FindReplace['step'] == 2 && count($FindReplaceResults) > 0 ) { ?>
 <p class="submit">
-	<input type="submit" name="Submit" id="powerpress_save_button" class="button-primary" value="Commit Changes" onclick="return ConfirmReplace()" />
+	<input type="submit" name="Submit" id="powerpress_save_button" class="button-primary" value="<?php echo __('Commit Changes', 'powerpress'); ?>" onclick="return ConfirmReplace()" />
 	&nbsp;
 	<input type="checkbox" name="FindReplace[verify]" value="1" <?php if( !empty($FindReplace['verify']) ) echo 'checked'; ?> onchange="return VerifyCheck(this)" />
-	<strong><?php echo __('Verify modified URLs', 'powerpress'); ?></strong>
-		(<?php echo __('Does not change media URL if link is not found or invalid', 'powerpress'); ?>)</p>
+	<strong><?php echo __('Verify URLs', 'powerpress'); ?></strong>
+		(<?php echo __('Does not change URL if invalid', 'powerpress'); ?>)</p>
 </p>
 <?php } else if ( $FindReplace['step'] == 3 || ($FindReplace['step'] == 2 && count($FindReplaceResults) == 0) ) { ?>
 <p class="submit">

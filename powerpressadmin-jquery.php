@@ -13,7 +13,7 @@ function powerpress_add_blubrry_redirect($program_keyword)
 	for( $x = 1; $x <= 3; $x++ )
 	{
 		$field = sprintf('redirect%d', $x);
-		if( !empty($Settings[$field]) && !stristr($Settings[$field], 'podtrac.com') )
+		if( !empty($Settings[$field]) && stripos($Settings[$field], 'podtrac.com') === false )
 			$NewSettings[$field] = '';
 	}
 	$NewSettings['redirect1'] = $RedirectURL.'/';
@@ -133,6 +133,19 @@ function powerpress_admin_jquery_init()
 			
 		}; // No break here, let this fall thru..
 		
+		case 'powerpress-jquery-hosting': {
+		
+				powerpress_admin_jquery_header( __('Blubrry Podcast Media Hosting', 'powerpress') );
+?>
+<div style="line-height: 32px; height: 32px;">&nbsp;</div>
+<iframe src="//www.blubrry.com/pp/" frameborder="0" style="overflow:hidden; overflow-y: hidden;" width="100%" height="480" scrolling="no" seamless="seamless"></iframe>
+<p style="text-align: center;"><a href="#" onclick="self.parent.tb_remove();"><?php echo __('Close', 'powerpress'); ?></a></p>
+<?php
+				powerpress_admin_jquery_footer();
+				exit;
+				
+		}; break;
+		
 		case 'powerpress-jquery-media': {
 			
 			if( !current_user_can('edit_posts') )
@@ -152,19 +165,8 @@ function powerpress_admin_jquery_init()
 				powerpress_admin_jquery_header( __('Select Media', 'powerpress') );
 ?>
 <h2><?php echo __('Select Media', 'powerpress'); ?></h2>
-<p><?php echo __('Wait a sec! This feature is only available to Blubrry Media Podcast Hosting customers.', 'powerpress');
-if( !isset($Settings['blubrry_auth']) )
-	echo ' '. sprintf( __('Join our community to get free podcast statistics and access to other valuable %s.', 'powerpress'),
-	'<a href="http://create.blubrry.com/resources/" target="_blank">'. __('services', 'powerpress') .'</a>');
-?>
-</p>
-<p><?php 
-	echo sprintf( __('Our %s integrated with PowerPress making podcast publishing simple. Check out the %s on our exciting three-step publishing system!', 'powerpress'),
-		'<a href="http://create.blubrry.com/resources/podcast-media-hosting/" target="_blank">'. __('Podcast Media Hosting', 'powerpress') .'</a>',
-		'<a href="http://create.blubrry.com/resources/podcast-media-hosting/blubrry-on-site-podcast-hosting-demo/" target="_blank">'. __('video', 'powerpress') .'</a>' );
-	?>
-   </p>
-	 <p><a href="<?php echo wp_nonce_url("admin.php?action=powerpress-jquery-media-disable", 'powerpress-jquery-media-disable'); ?>&amp;KeepThis=true&amp;TB_iframe=true&amp;modal=true" onclick="return confirm('<?php echo __('Remove the Blubrry Media Hosting icon from the Media URL field?', 'powerpress'); ?>');"><?php echo __('Do not show this icon next to the Media URL field', 'powerpress'); ?></a></p>
+<p><?php echo __('Wait a sec! This feature is only available to Blubrry Media Podcast Hosting customers.', 'powerpress'); ?></p>
+<iframe src="//www.blubrry.com/pp/" frameborder="0" style="overflow:hidden; overflow-y: hidden;" width="100%" height="480" scrolling="no" seamless="seamless"></iframe>
 <p style="text-align: center;"><a href="#" onclick="self.parent.tb_remove();"><?php echo __('Close', 'powerpress'); ?></a></p>
 <?php
 				powerpress_admin_jquery_footer();
@@ -207,7 +209,7 @@ if( !isset($Settings['blubrry_auth']) )
 			
 			$results =  powerpress_json_decode($json_data);
 				
-			$FeedSlug = $_GET['podcast-feed'];
+			$FeedSlug = sanitize_title($_GET['podcast-feed']);
 			powerpress_admin_jquery_header( __('Select Media', 'powerpress'), true );
 ?>
 <script language="JavaScript" type="text/javascript"><!--
@@ -247,11 +249,11 @@ function DeleteMedia(File)
 					$message = '';
 					if( !empty($results['quota']['expires']['expired']) )
 					{
-						$message = '<p>'. sprintf( __('Media hosting service expired on %s.', 'powerpress'), $results['quota']['expires']['readable_date']) . '</p>';
+						$message = '<p>'. sprintf( __('Media hosting service expired on %s.', 'powerpress'), esc_attr($results['quota']['expires']['readable_date'])) . '</p>';
 					}
 					else
 					{
-						$message = '<p>'. sprintf( __('Media hosting service will expire on %s.', 'powerpress'), $results['quota']['expires']['readable_date']) . '</p>';
+						$message = '<p>'. sprintf( __('Media hosting service will expire on %s.', 'powerpress'), esc_attr($results['quota']['expires']['readable_date'])) . '</p>';
 					}
 					
 					$message .= '<p style="text-align: center;"><strong><a href="'. $results['quota']['expires']['renew_link'] .'" target="_blank" style="text-decoration: underline;">'. __('Renew Media Hosting Service', 'powerpress') . '</a></strong></p>';
@@ -304,7 +306,7 @@ function DeleteMedia(File)
 				{
 ?>
 <div id="media-published-title">
-	<?php echo __('Media Published within the past 30 days', 'powerpress'); ?>:
+	<?php echo __('Last 20 Published media files', 'powerpress'); ?>:
 </div>
 <?php
 					$PublishedList = true;
@@ -654,15 +656,15 @@ jQuery(document).ready(function($) {
 <?php if( $Step == 1 ) { ?>
 	<p>
 		<label for="blubrry_username"><?php echo __('Blubrry User Name (Email)', 'powerpress'); ?></label>
-		<input type="text" id="blubrry_username" name="Settings[blubrry_username]" value="<?php echo $Settings['blubrry_username']; ?>" />
+		<input type="text" id="blubrry_username" name="Settings[blubrry_username]" value="<?php echo esc_attr($Settings['blubrry_username']); ?>" />
 	</p>
 	<p id="password_row">
 		<label for="password_password"><?php echo __('Blubrry Password', 'powerpress'); ?></label>
 		<input type="password" id="password_password" name="Password" value="" />
 	</p>
 <?php } else { ?>
-	<input type="hidden" name="Settings[blubrry_username]" value="<?php echo htmlspecialchars($Settings['blubrry_username']); ?>" />
-	<input type="hidden" name="Password" value="<?php echo htmlspecialchars($Password); ?>" />
+	<input type="hidden" name="Settings[blubrry_username]" value="<?php echo esc_attr($Settings['blubrry_username']); ?>" />
+	<input type="hidden" name="Password" value="<?php echo esc_attr($Password); ?>" />
 	<!-- <input type="hidden" name="Settings[blubrry_hosting]" value="<?php echo $Settings['blubrry_hosting']; ?>" /> -->
 	<p>
 		<label for="blubrry_program_keyword"><?php echo __('Select Blubrry Program', 'powerpress'); ?></label>
@@ -794,9 +796,9 @@ while( list($value,$desc) = each($Programs) )
 				powerpress_admin_jquery_footer();
 				exit;
 			}
-			
-			$File = (isset($_GET['File'])?$_GET['File']:false);
-			$Message = (isset($_GET['Message'])?$_GET['Message']:false);
+			// sanitize_title esc_attr esc_html powerpress_esc_html
+			$File = (isset($_GET['File'])? htmlspecialchars($_GET['File']):false);
+			$Message = (isset($_GET['Message'])? htmlspecialchars($_GET['Message']):'');
 			
 			powerpress_admin_jquery_header( __('Upload Complete', 'powerpress') );
 			echo '<h2>'. __('Uploader', 'powerpress') .'</h2>';
@@ -813,7 +815,7 @@ while( list($value,$desc) = each($Programs) )
 			<p style="text-align: center;"><a href="#" onclick="self.parent.tb_remove();"><?php echo __('Close', 'powerpress'); ?></a></p>
 			<?php
 			
-			if( $Message == '' )
+			if( empty($Message) )
 			{
 ?>
 <script language="JavaScript" type="text/javascript"><!--
@@ -840,7 +842,7 @@ function powerpress_admin_jquery_header($title, $jquery = false)
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" <?php do_action('admin_xml_ns'); ?> <?php language_attributes(); ?>>
 <head>
-<meta http-equiv="Content-Type" content="<?php bloginfo('html_type'); ?>; charset=<?php echo get_option('blog_charset'); ?>" />
+<meta http-equiv="Content-Type" content="<?php bloginfo('html_type'); ?>; charset=<?php bloginfo('charset'); ?>" />
 <title><?php bloginfo('name') ?> &rsaquo; <?php echo $title; ?> &#8212; <?php echo __('WordPress', 'powerpress'); ?></title>
 <?php
 
