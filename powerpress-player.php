@@ -867,8 +867,35 @@ function powerpressplayer_mediaobjects($type, $content, $media_url, $EpisodeData
 		$addhtml .= '<meta itemprop="name" content="'.  htmlspecialchars($post_title) .'" />'.PHP_EOL;
 	$addhtml .= '<meta itemprop="encodingFormat" content="'. powerpress_get_contenttype($media_url) .'" />'.PHP_EOL;
 	$addhtml .= '<meta itemprop="duration" content="'. powerpress_iso8601_duration($EpisodeData['duration']) .'" />'.PHP_EOL; // http://en.wikipedia.org/wiki/ISO_8601#Durations
-	if( !empty($EpisodeData['itunes_subtitle']) )
-		$addhtml .= '<meta itemprop="description" content="'.  htmlspecialchars($EpisodeData['itunes_subtitle']) .'" />'.PHP_EOL;
+	if( !empty($EpisodeData['subtitle']) )
+	{
+		$addhtml .= '<meta itemprop="description" content="'.  htmlspecialchars($EpisodeData['subtitle']) .'" />'.PHP_EOL;
+	}
+	else
+	{	// Get the current post object...
+		$post = get_post( );
+		// Get a subtitle from the post content or excerpt...
+		$subtitle = strip_tags($post->post_excerpt);
+		if( empty($subtitle) )
+		{
+			$subtitle = $post->post_content;
+			$subtitle = strip_shortcodes( $subtitle ); 
+			$subtitle = str_replace(']]>', ']]&gt;', $subtitle);
+			$subtitle = strip_tags($subtitle);
+			
+			$length = (function_exists('mb_strlen')?mb_strlen($subtitle):strlen($subtitle) );
+			if( $length > 250 ) {
+				$subtitle = (function_exists('mb_substr')?mb_substr($subtitle, 0, 250):substr($subtitle, 0, 250) ). '...';
+			}
+			
+			$addhtml .= '<meta itemprop="description" content="'.  htmlspecialchars($subtitle) .'" />'.PHP_EOL;
+		}
+		
+		if( empty($subtitle) )
+			$subtitle = $post_title;
+			
+		$addhtml .= '<meta itemprop="description" content="'.  htmlspecialchars($subtitle) .'" />'.PHP_EOL;
+	}
 	$addhtml .= '<meta itemprop="contentUrl" content="'. htmlspecialchars($media_url) .'" />'.PHP_EOL;
 	
 	// For thumbnail image, use the podcast artwork
@@ -989,8 +1016,10 @@ function powerpressplayer_link_pinw($content, $media_url, $ExtraData = array() )
 		case 5: { // Play in page and new window
 			if( $is_pdf )
 				$player_links .= "<a href=\"{$media_url}\" class=\"powerpress_link_pinw\" target=\"_blank\" title=\"". __('Open in New Window', 'powerpress') ."\" rel=\"nofollow\">". __('Open in New Window', 'powerpress') ."</a>".PHP_EOL;
-			else if( !empty($ExtraData['id']) && !empty($ExtraData['feed']) )
-				$player_links .= "<a href=\"{$media_url}\" class=\"powerpress_link_pinw\" target=\"_blank\" title=\"". POWERPRESS_PLAY_IN_NEW_WINDOW_TEXT ."\" onclick=\"return powerpress_pinw('{$ExtraData['id']}-{$ExtraData['feed']}');\" rel=\"nofollow\">". POWERPRESS_PLAY_IN_NEW_WINDOW_TEXT ."</a>".PHP_EOL;
+			else if( !empty($ExtraData['id']) && !empty($ExtraData['feed']) ) {
+				$pinw_url = get_bloginfo('url') ."/?powerpress_pinw={$ExtraData['id']}-{$ExtraData['feed']}";
+				$player_links .= "<a href=\"{$media_url}\" class=\"powerpress_link_pinw\" target=\"_blank\" title=\"". POWERPRESS_PLAY_IN_NEW_WINDOW_TEXT ."\" onclick=\"return powerpress_pinw('". esc_js($pinw_url) ."');\" rel=\"nofollow\">". POWERPRESS_PLAY_IN_NEW_WINDOW_TEXT ."</a>".PHP_EOL;
+			}
 			else
 				$player_links .= "<a href=\"{$media_url}\" class=\"powerpress_link_pinw\" target=\"_blank\" title=\"". POWERPRESS_PLAY_IN_NEW_WINDOW_TEXT ."\" rel=\"nofollow\">". POWERPRESS_PLAY_IN_NEW_WINDOW_TEXT ."</a>".PHP_EOL;
 		}; break;

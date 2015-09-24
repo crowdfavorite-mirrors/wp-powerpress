@@ -140,7 +140,7 @@ jQuery(document).ready(function($) {
 <div id="powerpress_admin_header">
 <h2><?php echo __('Blubrry PowerPress Settings', 'powerpress'); ?></h2> 
 	<span class="powerpress-mode"><?php echo __('Advanced Mode', 'powerpress'); ?>
-		&nbsp; <a href="<?php echo admin_url("admin.php?page=powerpress/powerpressadmin_basic.php&amp;mode=simple"); ?>" id="powerpress_advanced_mode_button" class="button-primary"><?php echo __('Switch to simplified Default Mode', 'powerpress'); ?></a>
+		&nbsp; <a href="<?php echo admin_url("admin.php?page=powerpress/powerpressadmin_basic.php&amp;mode=simple"); ?>" id="powerpress_advanced_mode_button" class="button-primary"><?php echo __('Switch to Simple Mode', 'powerpress'); ?></a>
 	</span>
 </div>
 
@@ -306,6 +306,20 @@ function powerpressadmin_advanced_options($General)
 	</div>
 </div>
 
+<?php
+	$link_action_url = admin_url('admin.php?action=powerpress-jquery-account');
+	$link_action = 'powerpress-jquery-account';
+?>
+<div style="margin-left: 10px;">
+	<h3><?php echo __('Link Blubrry Account', 'powerpress'); ?></h3>
+	<p style="font-size: 125%;">
+		<strong><a class="button-primary thickbox" title="<?php echo esc_attr(__('Blubrry Services Integration', 'powerpress')); ?>" href="<?php echo wp_nonce_url($link_action_url, $link_action); ?>&amp;KeepThis=true&amp;TB_iframe=true&amp;width=600&amp;height=400&amp;modal=false" target="_blank"><?php echo __('Click here to link Blubrry account', 'powerpress'); ?></a></strong>
+	</p>
+	<p>
+		<?php echo __('Link your blubrry.com account if you have a Blubrry Podcast Hosting or Blubrry Podcast Statistics services.', 'powerpress'); ?>
+	</p>
+</div>
+
 <div style="margin-left: 10px;">
 	<h3 style="margin-bottom: 5px;"><?php echo __('Looking for Support, Consulting or Custom Development?', 'powerpress'); ?></h3>
 	<p style="margin: 0  0 0 50px; font-size: 115%;">
@@ -313,6 +327,16 @@ function powerpressadmin_advanced_options($General)
 	</p>
 	<p style="margin: 5px 0 0 50px; font-size: 115%;">
 	<strong><?php echo '<a href="http://create.blubrry.com/support/" target="_blank">'. __('Learn More about Blubrry Support Options', 'powerpress') .'</a>'; ?></strong>
+	</p>
+</div>
+
+<div style="margin-left: 10px;">
+	<h3 style="margin-bottom: 5px;"><?php echo __('Want your own iOS and Android podcast apps?', 'powerpress'); ?></h3>
+	<p style="margin: 0  0 0 50px; font-size: 115%;">
+		<?php echo __('Blubrry has partnered with Reactor by AppPresser to provide iOS and Android apps for PowerPress powered podcasts. With Reactor, you are able to build, design and retain control of your app to highlight your podcast content, and provide access to value-add content from your website.', 'powerpress'); ?>
+	</p>
+	<p style="margin: 5px 0 0 50px; font-size: 115%;">
+		<strong><?php echo '<a href="http://create.blubrry.com/resources/partners/reactor-ios-android-podcast-apps-powerpress/" target="_blank">'. __('Learn More about Reactor iOS and Android podcast apps for PowerPress', 'powerpress') .'</a>'; ?></strong>
 	</p>
 </div>
 
@@ -333,14 +357,24 @@ function powerpressadmin_advanced_options($General)
 		</li>
 		<li><?php echo __('Tell the world about PowerPress by writing about it on your blog', 'powerpress'); ?>, 
 		<a href="http://twitter.com/home/?status=<?php echo urlencode( __('I\'m podcasting with Blubrry PowerPress (http://blubrry.com/powerpress/) #powerpress #wordpress', 'powerpress') ); ?>" target="_blank"><?php echo __('Twitter', 'powerpress'); ?></a>, 
-		<a href="http://www.facebook.com/share.php?u=<?php echo urlencode('http://create.blubrry.com/resources/powerpress/'); ?>&amp;t=<?php echo urlencode( __('I podcast with Blubrry PowerPress', 'powerpress')); ?>" target="_blank"><?php echo __('Facebook', 'powerpress'); ?></a>,
-		<a href="http://digg.com/submit?phase=2&amp;url=<?php echo urlencode('http://www.blubrry.com/powerpress'); ?>&amp;title=<?php echo urlencode( __('Blubrry PowerPress Podcasting Plugin for WordPress', 'powerpress') ); ?>" target="_blank"><?php echo __('Digg', 'powerpress'); ?></a>,
+		<a href="http://www.facebook.com/share.php?u=<?php echo urlencode('http://www.blubrry.com/powerpress'); ?>&amp;t=<?php echo urlencode( __('I podcast with Blubrry PowerPress', 'powerpress')); ?>" target="_blank"><?php echo __('Facebook', 'powerpress'); ?></a>,
+		<a href="https://plus.google.com/share?url==<?php echo urlencode('http://www.blubrry.com/powerpress'); ?>" target="_blank"><?php echo __('Google+', 'powerpress'); ?></a>,
 		etc...</li>
 		<li><a href="http://www.blubrry.com/contact.php" target="_blank"><?php echo __('Send us feedback', 'powerpress'); ?></a> (<?php echo __('we love getting suggestions for new features!', 'powerpress'); ?>)</li>
 	</ul>
 </div>
 <?php
 	}
+?>
+<div style="margin-left: 10px;">
+	<h3 style="margin-bottom: 5px;"><?php echo __('Become a PowerPress Patron!', 'powerpress'); ?></h3>
+	<p style="margin: 0; padding-left: 50px;">
+		<?php echo __('Help support your favorite podcasting plugin via Patreon.', 'powerpress'); ?>
+	</p>
+	<p style="margin-top: 0; padding-left: 50px;"><?php echo '<a href="https://www.patreon.com/blubrry?ty=h" target="_blank">'. __('Visit Blubrry\'s Patreon page', 'powerpress') .'</a>'; ?>
+	</p>
+</div>
+<?php
 }
 
 function powerpressadmin_edit_entry_options($General)
@@ -478,7 +512,7 @@ SelectEmbedField(<?php echo $General['episode_box_embed']; ?>);
 	if( !empty($General['hide_warnings']) )
 		$AdvanecdOptions = true;
 		
-	$DefaultMediaURL = (defined('POWERPRESS_DEFAULT_MEDIA_URL')? POWERPRESS_CUSTOM_MEDIA_URL :false);
+	$DefaultMediaURL = false;
 	
 	if( !empty($General['default_url']) )
 		$DefaultMediaURL = true;
@@ -489,7 +523,7 @@ SelectEmbedField(<?php echo $General['episode_box_embed']; ?>);
 <?php } ?>
 <!-- start advanced features -->
 <div id="advanced_basic_options" <?php echo ($AdvanecdOptions?'':'style="display:none;"'); ?>>
-<?php if( $DefaultMediaURL ) { ?>
+<?php if( $DefaultMediaURL || defined('POWERPRESS_DEFAULT_MEDIA_URL') ) { ?>
 <table class="form-table">
 <tr valign="top">
 <th scope="row"><?php echo __('Default Media URL', 'powerpress'); ?></th> 
@@ -712,7 +746,8 @@ function powerpressadmin_edit_itunes_general($FeedSettings, $General, $FeedAttri
 			echo get_feed_link($feed_slug);
 		}; break;
 		case 'post_type': {
-			$url = get_post_type_archive_feed_link($post_type, $feed_slug);
+			$url = get_post_type_archive_feed_link($FeedAttribs['post_type'], $feed_slug);
+			echo $url;
 		}; break;
 		case 'general':
 		default: {
@@ -747,7 +782,7 @@ function powerpressadmin_edit_blubrry_services($General, $action_url = false, $a
 </ul></li></ul>
 <div style="margin-left: 40px;">
 	<p style="font-size: 125%;">
-		<strong><a class="button-primary thickbox" href="<?php echo wp_nonce_url( $action_url, $action); ?>&amp;KeepThis=true&amp;TB_iframe=true&amp;width=600&amp;height=400&amp;modal=true" target="_blank"><?php echo __('Click here to configure Blubrry Statistics and Hosting services', 'powerpress'); ?></a></strong>
+		<strong><a class="button-primary thickbox" title="<?php echo esc_attr(__('Blubrry Services Integration', 'powerpress')); ?>" href="<?php echo wp_nonce_url( $action_url, $action); ?>&amp;KeepThis=true&amp;TB_iframe=true&amp;width=600&amp;height=400&amp;modal=false" target="_blank"><?php echo __('Click here to configure Blubrry Statistics and Hosting services', 'powerpress'); ?></a></strong>
 	</p>
 	<?php
 	if( !empty($General['blubrry_program_keyword']) )
@@ -791,7 +826,7 @@ function powerpressadmin_edit_blubrry_services($General, $action_url = false, $a
 	?>
 	<p>
 	<?php echo __('Recently upgraded to Blubrry Hosting?', 'powerpress'); ?> 
-	<a class="thickbox" href="<?php echo admin_url(); echo wp_nonce_url( "admin.php?action=powerpress-jquery-account", 'powerpress-jquery-account'); ?>&amp;KeepThis=true&amp;TB_iframe=true&amp;width=600&amp;height=400&amp;modal=true" target="_blank"><?php echo __('Click here to enter your account information.', 'powerpress'); ?></a>
+	<a class="thickbox" title="<?php echo esc_attr(__('Blubrry Services Integration', 'powerpress')); ?>" href="<?php echo admin_url(); echo wp_nonce_url( "admin.php?action=powerpress-jquery-account", 'powerpress-jquery-account'); ?>&amp;KeepThis=true&amp;TB_iframe=true&amp;width=600&amp;height=400&amp;modal=false" target="_blank"><?php echo __('Click here to enter your account information.', 'powerpress'); ?></a>
 	</p>
 	<?php
 		}
@@ -1036,7 +1071,7 @@ function powerpressadmin_appearance($General=false, $Feed = false)
 
 <?php echo __('Media Links', 'powerpress'); ?></th> 
 <td>
-	<p><label><input type="checkbox" name="PlayerSettings[display_pinw]" value="3" <?php if( $General['player_function'] == 3 || $General['player_function'] == 1 ) echo 'checked '; ?>/> <?php echo __('Display Play in new Window Link', 'powerpress'); ?></label></p>
+	<p style="padding-top: 8px;"><label><input type="checkbox" name="PlayerSettings[display_pinw]" value="3" <?php if( $General['player_function'] == 3 || $General['player_function'] == 1 ) echo 'checked '; ?>/> <?php echo __('Display Play in new Window Link', 'powerpress'); ?></label></p>
 	
 	<p><label><input type="checkbox" name="PlayerSettings[display_download]" value="1" <?php if( $General['podcast_link'] != 0 ) echo 'checked '; ?>/> <?php echo __('Display Download Link', 'powerpress'); ?></label></p>
 	
@@ -1058,13 +1093,42 @@ function powerpressadmin_appearance($General=false, $Feed = false)
 <th scope="row">
 <?php echo __('Subscribe Links', 'powerpress'); ?> <?php echo powerpressadmin_new(); ?></th> 
 <td>
-	<p><label><input type="checkbox" name="General[subscribe_links]" value="1" <?php if( $General['subscribe_links'] == 1 ) echo 'checked '; ?>/> 
+	<p style="padding-top: 8px;"><label><input type="checkbox" name="General[subscribe_links]" value="1" <?php if( $General['subscribe_links'] == 1 ) echo 'checked '; ?>/> 
 	<?php echo __('Display subscribe links below player and media links.', 'powerpress'); ?></label></p>
 	<ul>
 	<li><label for="subscribe_label">Subscribe label: <input type="text" id="subscribe_label" value="<?php echo esc_attr($General['subscribe_label']); ?>" name="General[subscribe_label]" placeholder="Subscribe:" /></label>
 	<?php echo __('(leave blank for default)', 'powerpress'); ?>
 	</li>
 	</ul>
+
+<p style="padding-top:10px;"><input type="checkbox" name="NULL[subscribe_feature_itunes]" value="1" checked disabled /> <label><?php echo __('Subscribe on iTunes', 'powerpress'); ?></label></p>
+<div style="margin-left: 24px;">
+	<p><?php echo __('Link to your one click iTunes Subscription URL.', 'powerpress'); ?></p>
+	
+	<p><a href="<?php echo 'https://linkmaker.itunes.apple.com/?q='.urlencode( get_bloginfo('name') ); ?>&amp;media=podcasts" target="_blank"><?php echo __('Find your iTunes Subscription URL', 'powerpress'); ?></a></p>
+</div>
+
+<p><input type="checkbox" name="NULL[subscribe_feature_android]" value="1" checked disabled /> <label><?php echo __('Subscribe on Android', 'powerpress'); ?></label> <?php echo powerpressadmin_new(); ?></p>
+<div style="margin-left: 24px;">
+	<p><?php echo __('Link to your one click Subscribe on Android URL.', 'powerpress'); ?></p>
+	<p><a href="http://subscribeonandroid.com/podcasters/" target="_blank"><?php echo __('Learn more about Subscribe on Android', 'powerpress'); ?></a></p>
+</div>
+
+<p><input type="checkbox" name="NULL[subscribe_feature_rss]" value="1" checked disabled /> <label><?php echo __('Subscribe via RSS', 'powerpress'); ?></label></p>
+<div style="margin-left: 24px;">
+	<p><?php echo __('Link to your podcast RSS feed.', 'powerpress'); ?></p>
+</div>
+
+<p><input type="checkbox" id="subscribe_feature_email" name="General[subscribe_feature_email]" value="1" <?php if( !empty($General['subscribe_feature_email']) ) echo 'checked '; ?>/> <label for="subscribe_feature_email"><?php echo __('Subscribe By Email', 'powerpress'); ?></label> <?php echo powerpressadmin_new(); ?></p>
+<div style="margin-left: 24px;">
+	<p><?php echo __('Link to your one click Subscribe by Email URL.', 'powerpress'); ?></p>
+	<p>
+	<?php echo __('Subscribe By Email is a service that allows listeners to subscribe to their favorite podcasts by email.', 'powerpress'); ?>
+	</p>
+	<p><a href="http://subscribebyemail.com/podcasters/" target="_blank"><?php echo __('Learn more about Subscribe by Email', 'powerpress'); ?></a></p>
+	<p><?php echo __('Note: Subscribe by Email does not replace newsletters or mailing lists. It is only for podcast syndication.', 'powerpress'); ?>
+	</p>
+</div>
 </td>
 </tr>
 </table>
@@ -1082,7 +1146,10 @@ function powerpressadmin_appearance($General=false, $Feed = false)
 <td>
 	<select name="General[player_aggressive]" class="bpp_input_med">
 <?php
-$linkoptions = array(0=>__('No, everything is working', 'powerpress'), 1=>__('Yes, please try to fix', 'powerpress'), 2=>__('Yes, alternative fix', 'powerpress') );
+$linkoptions = array(0=>__('No, everything is working', 'powerpress'),
+		1=>__('Yes, please try to fix', 'powerpress'),
+		2=>__('Yes, alternative fix', 'powerpress'),
+		3=>__('Yes, excluding excerpts', 'powerpress') );
 	
 while( list($value,$desc) = each($linkoptions) )
 	echo "\t<option value=\"$value\"". ($General['player_aggressive']==$value?' selected':''). ">$desc</option>\n";
@@ -1189,9 +1256,9 @@ function powerpress_admin_appearance_common($Feed, $FeedAttribs = array())
 	if( !empty($FeedAttribs['feed_slug']) )
 		$feed_slug = $FeedAttribs['feed_slug'];
 		
-	if( $FeedAttribs['type'] == 'post_type' || $FeedAttribs['type'] == 'ttid' )
+	if( $FeedAttribs['type'] == 'ttid' )
 	{
-		echo "<br /><br />";
+		//echo "<br /><br />";
 		return;
 	}
 ?>
@@ -1406,7 +1473,7 @@ function powerpressadmin_edit_artwork($FeedSettings, $General)
 <input type="text" id="itunes_image" name="Feed[itunes_image]" style="width: 60%;" value="<?php echo esc_attr( !empty($FeedSettings['itunes_image'])? $FeedSettings['itunes_image']:''); ?>" maxlength="250" />
 <a href="#" onclick="javascript: window.open( document.getElementById('itunes_image').value ); return false;"><?php echo __('preview', 'powerpress'); ?></a>
 
-<p><?php echo __('iTunes image must be at least 1400 x 1400 pixels in .jpg or .png format. iTunes image must not exceed 2048 x 2048 pixels and must use RGB color space.', 'powerpress'); ?> <?php echo __('Example', 'powerpress'); ?>: http://example.com/images/itunes.jpg
+<p><?php echo __('iTunes image must be at least 1400 x 1400 pixels in .jpg or .png format. iTunes image must not exceed 3000 x 3000 pixels and must use RGB color space.', 'powerpress'); ?> <?php echo __('Example', 'powerpress'); ?>: http://example.com/images/itunes.jpg
  </p>
 
 <p><strong><?php echo __('A square 1400 x 1400 pixel image in .jpg format is recommended.', 'powerpress'); ?></strong></p>
