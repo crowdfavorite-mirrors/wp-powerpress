@@ -93,6 +93,12 @@ body .pp-ssb-widget a.pp-ssb-btn:hover {
 .pp-ssb-widget-modern a.pp-ssb-email {
 	background-color: #337EC9;
 }
+.pp-ssb-widget-modern a.pp-ssb-stitcher {
+	background-color: #197195;
+}
+.pp-ssb-widget-modern a.pp-ssb-gp {
+	background-color: #F15832;
+}
 .pp-ssb-widget-modern a.pp-ssb-android {
 	background-color: #6AB344;
 }
@@ -122,6 +128,13 @@ body .pp-ssb-widget a.pp-ssb-btn:hover {
 .pp-ssb-android .pp-ssb-ic {
 	background-position: -98px -98px;
 }
+.pp-ssb-stitcher .pp-ssb-ic {
+	background-position: -147px -98px;
+}
+.pp-ssb-gp .pp-ssb-ic {
+	background-position: -196px -98px;
+}
+
 .pp-ssb-more .pp-ssb-ic {
   background-position: -49px -49px;
 }
@@ -231,8 +244,10 @@ body .pp-ssb-widget a.pp-ssb-btn:hover {
 		$ExtraData = array('subscribe_type'=>'general', 'feed'=>'', 'taxonomy_term_id'=>'', 'cat_id'=>'', 'post_type'=>'');
 		if( !empty($instance['subscribe_type']) )
 			$ExtraData['subscribe_type'] = $instance['subscribe_type'];
+		else
+			$ExtraData['subscribe_type'] =  '';
 			
-		switch( $instance['subscribe_type'] )
+		switch( $ExtraData['subscribe_type'] )
 		{
 			case 'post_type': {
 				
@@ -269,14 +284,18 @@ body .pp-ssb-widget a.pp-ssb-btn:hover {
 				}
 			}; break;
 			default: {
-				// Doesn't matter, we'r using the default podcast channel 
+				// Doesn't matter, we're using the default podcast channel 
 
 			};
 		}
 		
-		$Settings = powerpresssubscribe_get_settings(  $ExtraData );
+		$Settings = powerpresssubscribe_get_settings( $ExtraData, false );
 		if( empty($Settings) )
 			return;
+		
+		if( empty($instance['title']) )
+			$instance['title'] = __( 'Subscribe to Podcast' , 'powerpress');
+		$instance['title'] = trim($instance['title']);
 
 		echo $args['before_widget'];
 		if ( ! empty( $instance['title'] ) ) {

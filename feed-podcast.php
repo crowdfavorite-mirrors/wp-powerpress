@@ -22,25 +22,29 @@
 		return apply_filters('the_excerpt_rss', $output);
 	}
  
- $iTunesOrderNumber = 0;
- $FeaturedPodcastID = 0;
- $iTunesFeatured = get_option('powerpress_itunes_featured');
- $feed_slug = get_query_var('feed');
- if( !empty($iTunesFeatured[ $feed_slug ]) )
- {
-		if( get_post_type() == 'post' )
+	$GeneralSettings = get_option('powerpress_general');
+	$iTunesOrderNumber = 0;
+	$FeaturedPodcastID = 0;
+	
+	if( !empty($GeneralSettings['episode_box_feature_in_itunes']) ) {
+		$iTunesFeatured = get_option('powerpress_itunes_featured');
+		$feed_slug = get_query_var('feed');
+		if( !empty($iTunesFeatured[ $feed_slug ]) )
 		{
-			$FeaturedPodcastID = $iTunesFeatured[ $feed_slug ];
-			$GLOBALS['powerpress_feed']['itunes_feature'] = true; // So any custom order value is not used when looping through the feeds.
-			$iTunesOrderNumber = 2; // One reserved for featured episode
+			if( get_post_type() == 'post' )
+			{
+				$FeaturedPodcastID = $iTunesFeatured[ $feed_slug ];
+				$GLOBALS['powerpress_feed']['itunes_feature'] = true; // So any custom order value is not used when looping through the feeds.
+				$iTunesOrderNumber = 2; // One reserved for featured episode
+			}
 		}
  }
 
  
-header('Content-Type: ' . feed_content_type('rss-http') . '; charset=' . get_option('blog_charset'), true);
+header('Content-Type: application/rss+xml; charset=' . get_option('blog_charset'), true);
 $more = 1;
 
-$GeneralSettings = get_option('powerpress_general');
+
 $FeedActionHook = '';
 if( !empty($GeneralSettings['feed_action_hook']) )
 	$FeedActionHook = '_powerpress';
@@ -69,7 +73,13 @@ echo '<?xml version="1.0" encoding="'.get_option('blog_charset').'"?'.'>'."\n"; 
 		
 		$ItemCount = 0;
 	?>
-<?php while( have_posts()) : the_post(); ?>
+<?php while( have_posts()) :
+		
+		if( empty($GeneralSettings['feed_accel']) )
+			the_post();
+		else
+			$GLOBALS['post'] = $GLOBALS['wp_query']->next_post(); // Use this rather than the_post() that way we do not add additional queries to the database
+?>
 	<item>
 		<title><?php the_title_rss() ?></title>
 		<link><?php the_permalink_rss() ?></link>
@@ -78,22 +88,27 @@ echo '<?xml version="1.0" encoding="'.get_option('blog_charset').'"?'.'>'."\n"; 
 <?php
 		if( empty($GLOBALS['powerpress_feed']['feed_maximizer_on']) ) // If feed maximizer off
 		{
+			
+			if( empty($GeneralSettings['feed_accel']) ) {
 		?>
 		<comments><?php comments_link_feed(); ?></comments>
-		<dc:creator><?php the_author() ?></dc:creator>
-<?php the_category_rss('rss2') ?>
-<?php if (get_option('rss_use_excerpt')) : ?>
-		<description><?php echo powerpress_format_itunes_value( powerpress_get_the_excerpt_rss(), 'description' ); ?></description>
-<?php else : ?>
-		<description><?php echo powerpress_format_itunes_value( powerpress_get_the_excerpt_rss(), 'description' ); ?></description>
-<?php if ( strlen( $post->post_content ) > 0 ) : ?>
-		<content:encoded><![CDATA[<?php the_content_feed('rss2') ?>]]></content:encoded>
-<?php else : ?>
-		<content:encoded><![CDATA[<?php the_excerpt_rss() ?>]]></content:encoded>
-<?php endif; ?>
-<?php endif; ?>
 		<wfw:commentRss><?php echo esc_url( get_post_comments_feed_link(null, 'rss2') ); ?></wfw:commentRss>
 		<slash:comments><?php echo get_comments_number(); ?></slash:comments>
+<?php } // end powerpress feed comments  
+
+	if( empty($GeneralSettings['feed_accel']) ) {
+		the_category_rss('rss2');
+	}
+				if (get_option('rss_use_excerpt')) { ?>
+		<description><?php echo powerpress_format_itunes_value( powerpress_get_the_excerpt_rss(), 'description' ); ?></description>
+<?php } else { // else no rss_use_excerpt ?>
+		<description><?php echo powerpress_format_itunes_value( powerpress_get_the_excerpt_rss(), 'description' ); ?></description>
+<?php if ( strlen( $post->post_content ) > 0 ) { ?>
+		<content:encoded><![CDATA[<?php the_content_feed('rss2') ?>]]></content:encoded>
+<?php } else { //  else strlen( $post->post_content ) <= 0 ?>
+		<content:encoded><![CDATA[<?php the_excerpt_rss() ?>]]></content:encoded>
+<?php 		} // end else strlen( $post->post_content ) <= 0 ?>
+<?php } // end else no rss_use_excerpt ?>
 		<?php
 		}
 		else // If feed maximizer on
@@ -140,7 +155,10 @@ echo '<?xml version="1.0" encoding="'.get_option('blog_charset').'"?'.'>'."\n"; 
 		query_posts( array('p'=>$FeaturedPodcastID) );
 		if( have_posts())
 		{
-			the_post(); 
+			if( empty($GeneralSettings['feed_accel']) )
+				the_post();
+			else
+				$GLOBALS['post'] = $GLOBALS['wp_query']->next_post(); // Use this rather than the_post() that way we do not add additional queries to the database
 	// Featured podcast epiosde, give it the highest itunes:order value...
 ?>
 	<item>

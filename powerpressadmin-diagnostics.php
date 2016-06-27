@@ -503,7 +503,7 @@
 <td>
 	<div style="margin-top: 5px;">
 		<input type="text" name="Email" value="" style="width: 50%;" />
-		<input type="submit" name="Submit" id="powerpress_save_button" class="button-primary" value="Send Results" />
+		<input type="submit" name="Submit" id="powerpress_save_button" class="button-primary button-blubrry" value="Send Results" />
 	</div>
 	<div>
 		<input type="checkbox" name="CC" value="1" style="vertical-align: text-top;" checked /> CC: <?php $user_info = wp_get_current_user(); echo "&quot;{$user_info->user_nicename}&quot; &lt;{$user_info->user_email}&gt;"; ?>
